@@ -1,6 +1,7 @@
-import Head from "next/head"
-import { Inter } from "next/font/google"
-import ConnectWallet from '../components/ConnectWallet'
+import Head from 'next/head'
+import { Inter } from 'next/font/google'
+import ConnectWallet from '@/components/ConnectWallet'
+import WalletOverview from '@/components/WalletOverview'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -15,6 +16,7 @@ export default function Home() {
       </Head>
       <main>
         <ConnectWallet />
+        <WalletOverview />
       </main>
     </>
   )

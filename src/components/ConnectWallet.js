@@ -2,15 +2,11 @@
 import { useSDK } from '@metamask/sdk-react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { MetaMaskProvider } from "@metamask/sdk-react"
 import { formatBalance } from '../utils'
-import WalletOverview from './WalletOverview'
-import Modal from '@mui/material/Modal'
-import Typography from '@mui/material/Typography'
-
 import { useDispatch, useSelector } from 'react-redux'
-import { addAddressToStore, addChainToStore, addBalanceToStore } from '@/reducers/wallet'
+import { addAddressToStore, addChainToStore, addBalanceToStore, deleteFromStore } from '@/reducers/wallet'
 
 const ConnectWalletButton = () => {
     const { sdk, connected, connecting, provider, chainId } = useSDK()
@@ -24,6 +20,9 @@ const ConnectWalletButton = () => {
     }
     const addBalance = (amount) => {
         dispatch(addBalanceToStore(amount))
+    }
+    const clearStore = () => {
+        dispatch(deleteFromStore())
     }
 
     const wallet = useSelector((state) => state.wallet.value)
@@ -40,12 +39,8 @@ const ConnectWalletButton = () => {
     }
 
     useEffect(() => {
-        const chain = chainId
-        if(wallet.address) {
-            addChain(chain)
-        }
-        else addChain(null)
-    }, [wallet.address, wallet.network])
+            updateChain()
+    }, [wallet.address, chainId])
 
     useEffect(() => {
         if(wallet.address) {
@@ -86,27 +81,21 @@ const ConnectWalletButton = () => {
           }
     }, [wallet])
 
-    // Account details modal
-    const [open, setOpen] = useState(false)
-    const handleOpen = () => setOpen(true)
-    const handleClose = () => setOpen(false)
+
+    // Disconnect wallet
+    const disconnect = () => {
+        if (sdk) {
+            sdk.terminate()
+            clearStore()
+        }
+    }
 
     return (
         <Box>
             {wallet.address ? (
-                <>
-                    <Button variant='outlined' onClick={handleOpen}>
-                        Wallet
+                    <Button variant='outlined' onClick={disconnect}>
+                        Disconnect
                     </Button>
-                    <Modal
-                    open={open}
-                    onClose={handleClose}
-                    aria-labelledby="modal-modal-title"
-                    aria-describedby="modal-modal-description"
-                    >
-                    <WalletOverview />
-                    </Modal>
-                </>
             ) : (
                 <Button disabled={connecting} variant='contained' onClick={connect}>
                     Connect wallet
