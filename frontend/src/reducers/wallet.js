@@ -4,8 +4,8 @@ const initialState = {
     value: {
         address: null,
         network: null,
-        balance: null
-    }
+        balance: null,
+    },
 }
 
 export const walletSlice = createSlice({
@@ -25,9 +25,14 @@ export const walletSlice = createSlice({
             state.value.address = null
             state.value.network = null
             state.value.balance = null
-        }
-    }
+        },
+    },
 })
 
-export const { addAddressToStore, addChainToStore, addBalanceToStore, deleteFromStore } = walletSlice.actions
+export const {
+    addAddressToStore,
+    addChainToStore,
+    addBalanceToStore,
+    deleteFromStore,
+} = walletSlice.actions
 export default walletSlice.reducer
