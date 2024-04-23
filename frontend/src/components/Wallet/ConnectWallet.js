@@ -3,10 +3,15 @@ import { useSDK } from '@metamask/sdk-react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import React, { useEffect } from 'react'
-import { MetaMaskProvider } from "@metamask/sdk-react"
-import { formatBalance } from '../utils'
+import { MetaMaskProvider } from '@metamask/sdk-react'
+import { formatBalance } from '../../utils'
 import { useDispatch, useSelector } from 'react-redux'
-import { addAddressToStore, addChainToStore, addBalanceToStore, deleteFromStore } from '@/reducers/wallet'
+import {
+    addAddressToStore,
+    addChainToStore,
+    addBalanceToStore,
+    deleteFromStore,
+} from '@/reducers/wallet'
 
 const ConnectWalletButton = () => {
     const { sdk, connected, connecting, provider, chainId } = useSDK()
@@ -30,7 +35,7 @@ const ConnectWalletButton = () => {
     // Connect metamask
     const connect = async () => {
         try {
-            const connect =  await sdk?.connect()
+            const connect = await sdk?.connect()
             addAddress(connect?.[0])
             setOpen(false)
         } catch (err) {
@@ -39,16 +44,18 @@ const ConnectWalletButton = () => {
     }
 
     useEffect(() => {
-            updateChain()
+        updateChain()
     }, [wallet.address, chainId])
 
     useEffect(() => {
-        if(wallet.address) {
+        if (wallet.address) {
             const getBalance = async () => {
-            let balance = formatBalance(await window.ethereum.request({
-                    method: 'eth_getBalance',
-                    params: [wallet.address, 'latest']
-                }))
+                let balance = formatBalance(
+                    await window.ethereum.request({
+                        method: 'eth_getBalance',
+                        params: [wallet.address, 'latest'],
+                    })
+                )
                 addBalance(balance)
             }
             getBalance()
@@ -57,14 +64,16 @@ const ConnectWalletButton = () => {
 
     // Connected account or chain change
     const updateAccount = async () => {
-        const address = await window.ethereum.request({ method: 'eth_accounts' })
+        const address = await window.ethereum.request({
+            method: 'eth_accounts',
+        })
         addAddress(address[0])
     }
 
     const updateChain = async () => {
         const chain = await window.ethereum.request({
             method: 'eth_chainId',
-          })
+        })
         addChain(chain)
         // await updateAccount()
     }
@@ -74,13 +83,9 @@ const ConnectWalletButton = () => {
         window.ethereum.on('chainChanged', updateChain)
         return () => {
             window.ethereum?.removeListener('accountsChanged', updateAccount)
-            window.ethereum?.removeListener(
-              'chainChanged',
-              updateChain,
-            )
-          }
+            window.ethereum?.removeListener('chainChanged', updateChain)
+        }
     }, [wallet])
-
 
     // Disconnect wallet
     const disconnect = () => {
@@ -93,11 +98,15 @@ const ConnectWalletButton = () => {
     return (
         <Box>
             {wallet.address ? (
-                    <Button variant='outlined' onClick={disconnect}>
-                        Disconnect
-                    </Button>
+                <Button variant="outlined" onClick={disconnect}>
+                    Disconnect
+                </Button>
             ) : (
-                <Button disabled={connecting} variant='contained' onClick={connect}>
+                <Button
+                    disabled={connecting}
+                    variant="contained"
+                    onClick={connect}
+                >
                     Connect wallet
                 </Button>
             )}
@@ -106,15 +115,18 @@ const ConnectWalletButton = () => {
 }
 
 const ConnectWallet = () => {
-      // Metamask init
-    const host = typeof window !== "undefined" ? window.location.host : "http://localhost:3001"
+    // Metamask init
+    const host =
+        typeof window !== 'undefined'
+            ? window.location.host
+            : 'http://localhost:3001'
     const sdkOptions = {
         logging: { developerMode: false },
         checkInstallationImmediately: false,
         dappMetadata: {
-        name: "0x-wallet",
-        url: host
-        }
+            name: '0x-wallet',
+            url: host,
+        },
     }
 
     return (
