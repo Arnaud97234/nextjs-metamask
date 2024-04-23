@@ -1,9 +1,9 @@
 # 0x-wallet
 
-### Setup
+## Setup
 
-Start backend: `yarn start` or `nodemon`
-Start frontend: `yarn dev`
+- Start backend: `yarn start` or `nodemon`
+- Start frontend: `yarn dev`
 
 Supported networks:
 
@@ -11,10 +11,11 @@ Supported networks:
 -   Matic
 -   Arbitrum
 
-.env example:
 
-```
-API_KEY=<apiKey>
-NETWORK=ETH_MAINNET
-#NETWORK=MATIC_MAINNET
-```
+[!NOTE]
+>.env example:
+>```
+>API_KEY=<apiKey>
+>NETWORK=ETH_MAINNET
+>#NETWORK=MATIC_MAINNET
+>```
