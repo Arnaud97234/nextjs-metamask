@@ -11,13 +11,14 @@ const WalletOverview = () => {
 
     return address ? (
         <>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-                Wallet connected:
+            <Typography id="title" variant="h6" component="h3">
+                Connected with {address} on {network}
             </Typography>
             <Box>
-                <Typography>{wallet.address}</Typography>
-                <Typography>{wallet.network}</Typography>
                 <Typography>{wallet.balance}</Typography>
+                {network === '0x1' && (
+                    <Typography color="blue">MAINNET</Typography>
+                )}
             </Box>
         </>
     ) : (

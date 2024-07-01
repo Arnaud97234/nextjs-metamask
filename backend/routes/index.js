@@ -20,6 +20,7 @@ const alchemy = new AlchemyMultichainClient(defaultConfig, overrides)
 
 const networksList = {
     '0x1': Network.ETH_MAINNET,
+    '0xaa36a7': Network.ETH_SEPOLIA,
     '0x89': Network.MATIC_MAINNET,
     '0xa4b1': Network.ARB_MAINNET,
 }
@@ -54,6 +55,100 @@ router.get('/:address/:chain', async function (req, res) {
               chainId: networkInfo.chainId,
               blockHeight,
           })
+})
+
+/* GET transactions */
+router.get('/:address/:chain/transactions/', async function (req, res) {
+    const address = req.params.address
+    const chainId = req.params.chain
+    let response = await alchemy
+        .forNetwork(networksList[chainId])
+        .core.getAssetTransfers({
+            fromBlock: '0x0',
+            fromAddress: address,
+            excludeZeroValue: true,
+            category: ['erc20'],
+        })
+    res.json({
+        response,
+    })
+})
+
+/* GET Tokens */
+router.get('/:address/:chain/tokens', async function (req, res) {
+    const address = req.params.address
+    const chainId = req.params.chain
+    let response = await alchemy
+        .forNetwork(networksList[chainId])
+        .core.getTokensForOwner(address)
+
+    res.json({ response })
+})
+
+/* GET nfts */
+router.get('/:address/:chain/nfts', async function (req, res) {
+    const address = req.params.address
+    const chainId = req.params.chain
+    const response = await alchemy
+        .forNetwork(networksList[chainId])
+        .nft.getContractsForOwner(address)
+    const filtered = response.contracts.map((e) => {
+        const checkSymbol = () => {
+            let symbol = e.symbol.toLocaleLowerCase()
+            let test
+            if (
+                !symbol ||
+                symbol.includes('fortnite') ||
+                symbol.includes('enjpool.com') ||
+                symbol.includes('airdrop') ||
+                symbol.includes('reward')
+            ) {
+                test = true
+            }
+            return test
+        }
+        if (!e.isSpam && e.symbol && !checkSymbol()) {
+            return {
+                name: e.name,
+                contract: e.address,
+                symbol: e.symbol,
+                type: e.tokenType,
+                image: e.image,
+                balance: e.totalBalance,
+            }
+        }
+    })
+    const contracts = await filtered.filter((e) => e)
+    const contractsList = await contracts.map((e) => {
+        return e.contract
+    })
+    const nftsList = await alchemy
+        .forNetwork(networksList[chainId])
+        .nft.getNftsForOwner(address, {
+            contractAddresses: contractsList,
+        })
+
+    const nftsByCollection = async () => {
+        let result = []
+        await contracts.map((collection) => {
+            let list = []
+            nftsList &&
+                nftsList.ownedNfts.map((nft) => {
+                    nft.contract.address == collection.contract &&
+                        list.push({
+                            name: nft.name,
+                            desc: nft.description,
+                            tokenId: nft.tokenId,
+                            tokenUri: nft.tokenUri,
+                            image: nft.image,
+                        })
+                })
+            result.push({ collection, nfts: list })
+        })
+        return result
+    }
+
+    res.json(await nftsByCollection())
 })
 
 module.exports = router

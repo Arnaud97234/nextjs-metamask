@@ -35,13 +35,14 @@ const WalletOverview = () => {
                     setAccount(response.data)
                 })
                 .catch((error) => {
-                    setError(error.response.data.error)
+                    setError(error.response)
+                    console.log(error)
                 })
         }
     }, [connectedAddress, connectedNetwork])
 
     const ErrorContent = () => {
-        return <Typography>{error}</Typography>
+        return <Typography style={{ color: 'red' }}>{error}</Typography>
     }
 
     const AccountDetails = () => {
@@ -49,10 +50,7 @@ const WalletOverview = () => {
             connectedAddress &&
             account && (
                 <Box>
-                    <Typography>ACCOUNT INFOS:</Typography>
-                    <Typography>Address: {connectedAddress}</Typography>
                     {account.ens && <Typography>Ens: {account.ens}</Typography>}
-                    <Typography>Network: {account.network}</Typography>
                     <Typography>Balance: {account.nativeBalance} Ξ</Typography>
                     <Typography>BlockHeight: {account.blockHeight}</Typography>
                 </Box>

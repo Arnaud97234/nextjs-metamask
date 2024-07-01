@@ -64,27 +64,42 @@ const ConnectWalletButton = () => {
 
     // Connected account or chain change
     const updateAccount = async () => {
+        if(window.ethereum) {
+        try {
         const address = await window.ethereum.request({
             method: 'eth_accounts',
         })
         addAddress(address[0])
+    } catch (err) {
+        return {error: err.message}
+    }}
     }
 
     const updateChain = async () => {
+        if(window.ethereum) {
+        try {
         const chain = await window.ethereum.request({
             method: 'eth_chainId',
         })
         addChain(chain)
         // await updateAccount()
+    } catch (err) {
+        return {error: err.message}
+    }}
     }
 
     useEffect(() => {
-        window.ethereum.on('accountsChanged', updateAccount)
-        window.ethereum.on('chainChanged', updateChain)
-        return () => {
-            window.ethereum?.removeListener('accountsChanged', updateAccount)
-            window.ethereum?.removeListener('chainChanged', updateChain)
-        }
+        if(window.ethereum) {
+        try {
+            window.ethereum.on('accountsChanged', updateAccount)
+            window.ethereum.on('chainChanged', updateChain)
+            return () => {
+                window.ethereum?.removeListener('accountsChanged', updateAccount)
+                window.ethereum?.removeListener('chainChanged', updateChain)
+            }
+        } catch (err) {
+            return ({error: err.message})
+        }}
     }, [wallet])
 
     // Disconnect wallet
@@ -124,14 +139,14 @@ const ConnectWallet = () => {
         logging: { developerMode: false },
         checkInstallationImmediately: false,
         dappMetadata: {
-            name: '0x-wallet',
+            name: '0x-sandbox',
             url: host,
         },
     }
 
     return (
         <MetaMaskProvider debug={false} sdkOptions={sdkOptions}>
-            <ConnectWalletButton />
+           <ConnectWalletButton />
         </MetaMaskProvider>
     )
 }
