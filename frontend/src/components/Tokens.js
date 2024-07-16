@@ -1,6 +1,6 @@
 import styles from '../styles/Home.module.css'
 import { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import {
     Box,
     Typography,
@@ -10,67 +10,77 @@ import {
 } from '@mui/material'
 import Link from 'next/link'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
-const axios = require('axios')
+import { addTokensToStore } from '@/reducers/tokens'
 
-const Tokens = () => {
-    const wallet = useSelector((state) => state.wallet.value)
+const Tokens = ({ props }) => {
+    const dispatch = useDispatch()
+    const addTokens = (list) => {
+        dispatch(addTokensToStore(list))
+    }
 
-    const [tokensList, setTokensList] = useState(null)
+    const tokensFromStore = useSelector((state) => state.tokens.value)
+    const [tokensList, setTokensList] = useState(tokensFromStore.tokens)
     const [error, setError] = useState(null)
-    const [address, setAddress] = useState(wallet.address)
-    const [chain, setChain] = useState(wallet.chain)
+    const [address, setAddress] = useState(null)
+    const [chain, setChain] = useState(null)
 
     useEffect(() => {
-        setAddress(wallet.address)
-        setChain(wallet.network)
-        if (address && chain) {
-            setError(null)
-            axios
-                .get(`http://localhost:3000/${address}/${chain}/tokens`)
-                .then((response) => {
-                    setTokensList(response.data)
-                })
-                .catch((error) => {
-                    setError(error.message)
-                })
-        }
-    }, [wallet])
+        setAddress(props.address)
+        setChain(props.network)
+        setTokensList(tokensFromStore.tokens)
+    }, [props, tokensFromStore])
 
-    const tokens =
-        tokensList &&
-        tokensList.map((e) => {
-            const title = `${e.name} ${e.contractAddress}`
-            const etherscanLink = `https://etherscan.io/token/${e.contractAddress}`
-            return tokensList ? (
-                e.balance > 0 && (
-                    <Accordion
-                        className={styles.token}
-                        sx={{ display: 'flex' }}
+    useEffect(() => {
+        if (address && chain && !tokensList) {
+            try {
+                fetch(`http://localhost:3000/${address}/${chain}/tokens`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log('Get Erc20 from Api...')
+                        addTokens(data)
+                    })
+            } catch (err) {
+                console.log('Error :', error)
+                setError(err)
+            }
+        }
+        setTokensList(tokensFromStore.tokens)
+    }, [address, chain])
+
+    const tokens = tokensList?.map((e, key) => {
+        const title = `${e.name} ${e.contractAddress}`
+        const etherscanLink = `https://etherscan.io/token/${e.contractAddress}`
+        return tokensList ? (
+            e.balance > 0 && (
+                <Accordion
+                    className={styles.token}
+                    sx={{ display: 'flex' }}
+                    key={key}
+                >
+                    <AccordionSummary
+                        className={styles.tokenSummary}
+                        expandIcon={<ArrowDropDownIcon />}
                     >
-                        <AccordionSummary
-                            className={styles.tokenSummary}
-                            expandIcon={<ArrowDropDownIcon />}
+                        <Typography sx={{ marginRight: '10px' }}>
+                            {e.symbol} {e.balance}
+                        </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ padding: 0 }}>
+                        <Typography>{title}</Typography>
+                        <Link
+                            href={etherscanLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
                         >
-                            <Typography sx={{ marginRight: '10px' }}>
-                                {e.symbol} {e.balance}
-                            </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ padding: 0 }}>
-                            <Typography>{title}</Typography>
-                            <Link
-                                href={etherscanLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                View on etherscan
-                            </Link>
-                        </AccordionDetails>
-                    </Accordion>
-                )
-            ) : (
-                <Typography>Token list is empty</Typography>
+                            View on etherscan
+                        </Link>
+                    </AccordionDetails>
+                </Accordion>
             )
-        })
+        ) : (
+            <Typography>Token list is empty</Typography>
+        )
+    })
 
     return (
         address && (

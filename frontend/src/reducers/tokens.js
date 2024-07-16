@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 const initialState = {
     value: {
         tokens: null,
-    }
+    },
 }
 
 export const tokensSlice = createSlice({
@@ -12,11 +12,12 @@ export const tokensSlice = createSlice({
     reducers: {
         addTokensToStore: (state, action) => {
             state.value.tokens = action.payload
-        }
-    }
+        },
+        removeTokensFromStore: (state) => {
+            state.value.tokens = null
+        },
+    },
 })
 
-export const {
-    addTokensToStore
-} = tokensSlice.actions
+export const { addTokensToStore, removeTokensFromStore } = tokensSlice.actions
 export default tokensSlice.reducer

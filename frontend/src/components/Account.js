@@ -1,7 +1,7 @@
 import styles from '../styles/Home.module.css'
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { deleteFromStore } from '../reducers/wallet'
+import { removeWalletFromStore } from '../reducers/wallet'
 import { Box, Typography } from '@mui/material'
 
 const axios = require('axios')
@@ -10,7 +10,7 @@ const WalletOverview = () => {
     const dispatch = useDispatch()
 
     const clearStore = () => {
-        dispatch(deleteFromStore())
+        dispatch(removeWalletFromStore())
     }
 
     const [connectedAddress, setConnectedAddress] = useState(null)

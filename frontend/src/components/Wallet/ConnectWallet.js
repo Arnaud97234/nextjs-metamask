@@ -9,8 +9,10 @@ import {
     addAddressToStore,
     addChainToStore,
     addBalanceToStore,
-    deleteFromStore,
+    removeWalletFromStore,
 } from '@/reducers/wallet'
+import { removeNftsFromStore } from '@/reducers/nfts'
+import { removeTokensFromStore } from '@/reducers/tokens'
 
 const ConnectWalletButton = () => {
     const { sdk, connected, connecting, provider, chainId } = useSDK()
@@ -26,7 +28,9 @@ const ConnectWalletButton = () => {
         dispatch(addBalanceToStore(amount))
     }
     const clearStore = () => {
-        dispatch(deleteFromStore())
+        dispatch(removeWalletFromStore())
+        dispatch(removeNftsFromStore())
+        dispatch(removeTokensFromStore())
     }
 
     const wallet = useSelector((state) => state.wallet.value)
@@ -44,6 +48,8 @@ const ConnectWalletButton = () => {
 
     useEffect(() => {
         updateChain()
+        dispatch(removeNftsFromStore())
+        dispatch(removeTokensFromStore())
     }, [wallet.address, chainId])
 
     useEffect(() => {

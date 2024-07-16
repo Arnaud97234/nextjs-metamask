@@ -1,9 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-    value: {
-        nfts: null,
-    },
+    value: { nfts: null },
 }
 
 export const nftsSlice = createSlice({
@@ -13,8 +11,11 @@ export const nftsSlice = createSlice({
         addNftsToStore: (state, action) => {
             state.value.nfts = action.payload
         },
+        removeNftsFromStore: (state) => {
+            state.value.nfts = null
+        },
     },
 })
 
-export const { addNftsToStore } = nftsSlice.actions
+export const { addNftsToStore, removeNftsFromStore } = nftsSlice.actions
 export default nftsSlice.reducer

@@ -11,11 +11,13 @@ import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import { useState } from 'react'
+import { useSelector } from 'react-redux'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
     const [tabValue, setTabValue] = useState('1')
+    const wallet = useSelector((state) => state.wallet.value)
 
     const handleChangeTab = (event, newValue) => {
         setTabValue(newValue)
@@ -54,10 +56,10 @@ export default function Home() {
                             <Tab label="Transactions" value="3" />
                         </TabList>
                         <TabPanel className={styles.tabPanel} value="1">
-                            <Tokens />
+                            <Tokens props={wallet} />
                         </TabPanel>
                         <TabPanel value="2">
-                            <Nfts />
+                            <Nfts props={wallet} />
                         </TabPanel>
                         <TabPanel value="3"></TabPanel>
                     </TabContext>

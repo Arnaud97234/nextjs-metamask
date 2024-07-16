@@ -95,6 +95,23 @@ router.get('/:address/:chain/tokens', async function (req, res) {
         '0xe00cd9b8ebb503e4be266983efc6158fcffe0004',
         '0xe0923e597cb4b48e2ee122604b4241cbd6d93497',
         '0xe23366cccf6c5318b47621ceac3296d480b5ebc8',
+        '0x02677c45fa858b9ffec24fc791bf72cdf4a8a8df',
+        '0x02c013cf08f2c504caefd71fab6bf8969bc3c819',
+        '0x06ac6b82e79b6b70757b578d7fbd197ce73c4ee3',
+        '0x0b91b07beb67333225a5ba0259d55aee10e3a578',
+        '0x1a2d2769932f6ca3dcfeddd5866d9e7598d024e7',
+        '0x15e2a3c1833d57fc2b43024cd16a552a1994de46',
+        '0x1ef250b4a02505cfb4fba4d1ce1bb7e411851739',
+        '0x21a95b532bc665548b7c0c8a4b047501f51c8d8a',
+        '0x247833686b12791f258128788ce6d632796b342e',
+        '0x2a636a1bf3379d27b646c0f2cf8f282898e76f45',
+        '0x31f3a4a1643618ae9b8940c52f39727d23e8352e',
+        '0x367dc874f135455001e5df13d3dbba0f91bf910d',
+        '0x3a13f50683db34550e7ab7ad898293171cc8892e',
+        '0x3b4cb73bee36a17f13546adf0c5860fbc53331cd',
+        '0x43458017d9b057c9c2fe97e4629014cb9b66093e',
+        '0x509a5b5ecdb5c55ced8a87f3b87b576c7463ead3',
+        '0x10503dbed34e291655100a3c204528425abe3235',
     ]
     let response = await alchemy
         .forNetwork(networksList[chainId])
@@ -120,18 +137,18 @@ router.get('/:address/:chain/nfts', async function (req, res) {
     const filtered = await response.contracts.map((e) => {
         const checkSymbol = () => {
             let symbol = e.symbol.toLocaleLowerCase()
-            console.log(`Contract Address: ${e.contract}`)
             let test
             if (
                 !symbol ||
                 symbol.includes('fortnite') ||
                 symbol.includes('enjpool.com') ||
                 symbol.includes('airdrop') ||
-                symbol.includes('reward')
-                // e.collection.contractAddress ==
-                //     '0x86083B74A4165754D20724cB719d9fAf7774FB22' ||
-                // e.collection.contractAddress ==
-                //     '0xf889dd6AD49D49d4b3e1f8212f00fFb38FADc300'
+                symbol.includes('reward') ||
+                e.address == '0x86083B74A4165754D20724cB719d9fAf7774FB22' ||
+                e.address == '0xf889dd6AD49D49d4b3e1f8212f00fFb38FADc300' ||
+                e.address == '0x4f7c7196A4c7Ca429FAc05461f734e2Adb49dcC4' ||
+                e.address == '0x4f39bAFFc187dD6c21846404C2d304A1bCfE1ADB' ||
+                e.address == '0x57e0A744773A18D1f212B961985115C514160b3f'
             ) {
                 test = true
             }
