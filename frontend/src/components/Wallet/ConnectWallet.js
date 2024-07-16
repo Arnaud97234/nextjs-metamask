@@ -1,7 +1,6 @@
 'use-client'
 import { useSDK } from '@metamask/sdk-react'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
+import { Box, Button } from '@mui/material'
 import React, { useEffect } from 'react'
 import { MetaMaskProvider } from '@metamask/sdk-react'
 import { formatBalance } from '../../utils'
@@ -64,42 +63,48 @@ const ConnectWalletButton = () => {
 
     // Connected account or chain change
     const updateAccount = async () => {
-        if(window.ethereum) {
-        try {
-        const address = await window.ethereum.request({
-            method: 'eth_accounts',
-        })
-        addAddress(address[0])
-    } catch (err) {
-        return {error: err.message}
-    }}
+        if (window.ethereum) {
+            try {
+                const address = await window.ethereum.request({
+                    method: 'eth_accounts',
+                })
+                addAddress(address[0])
+            } catch (err) {
+                return { error: err.message }
+            }
+        }
     }
 
     const updateChain = async () => {
-        if(window.ethereum) {
-        try {
-        const chain = await window.ethereum.request({
-            method: 'eth_chainId',
-        })
-        addChain(chain)
-        // await updateAccount()
-    } catch (err) {
-        return {error: err.message}
-    }}
+        if (window.ethereum) {
+            try {
+                const chain = await window.ethereum.request({
+                    method: 'eth_chainId',
+                })
+                addChain(chain)
+                // await updateAccount()
+            } catch (err) {
+                return { error: err.message }
+            }
+        }
     }
 
     useEffect(() => {
-        if(window.ethereum) {
-        try {
-            window.ethereum.on('accountsChanged', updateAccount)
-            window.ethereum.on('chainChanged', updateChain)
-            return () => {
-                window.ethereum?.removeListener('accountsChanged', updateAccount)
-                window.ethereum?.removeListener('chainChanged', updateChain)
+        if (window.ethereum) {
+            try {
+                window.ethereum.on('accountsChanged', updateAccount)
+                window.ethereum.on('chainChanged', updateChain)
+                return () => {
+                    window.ethereum?.removeListener(
+                        'accountsChanged',
+                        updateAccount
+                    )
+                    window.ethereum?.removeListener('chainChanged', updateChain)
+                }
+            } catch (err) {
+                return { error: err.message }
             }
-        } catch (err) {
-            return ({error: err.message})
-        }}
+        }
     }, [wallet])
 
     // Disconnect wallet
@@ -146,7 +151,7 @@ const ConnectWallet = () => {
 
     return (
         <MetaMaskProvider debug={false} sdkOptions={sdkOptions}>
-           <ConnectWalletButton />
+            <ConnectWalletButton />
         </MetaMaskProvider>
     )
 }

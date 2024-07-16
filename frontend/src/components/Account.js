@@ -1,7 +1,8 @@
+import styles from '../styles/Home.module.css'
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { deleteFromStore } from '../../reducers/wallet'
-import { Button, Box, Typography } from '@mui/material'
+import { deleteFromStore } from '../reducers/wallet'
+import { Box, Typography } from '@mui/material'
 
 const axios = require('axios')
 
@@ -49,7 +50,7 @@ const WalletOverview = () => {
         return (
             connectedAddress &&
             account && (
-                <Box>
+                <Box id={styles.accountBox} className={styles.leftBox}>
                     {account.ens && <Typography>Ens: {account.ens}</Typography>}
                     <Typography>Balance: {account.nativeBalance} Ξ</Typography>
                     <Typography>BlockHeight: {account.blockHeight}</Typography>

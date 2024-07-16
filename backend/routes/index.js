@@ -25,7 +25,7 @@ const networksList = {
     '0xa4b1': Network.ARB_MAINNET,
 }
 
-/* GET home page. */
+/* GET wallet */
 router.get('/:address/:chain', async function (req, res) {
     const address = req.params.address
     const chainId = req.params.chain
@@ -78,11 +78,36 @@ router.get('/:address/:chain/transactions/', async function (req, res) {
 router.get('/:address/:chain/tokens', async function (req, res) {
     const address = req.params.address
     const chainId = req.params.chain
+    const spams = [
+        '0x08e1d08db3fd8dd33e040176ad3ea09b7242a8f0',
+        '0x11cc04dd962e82d411587c56b815e8f8141eb7d5',
+        '0x1412eca9dc7daef60451e3155bb8dbf9da349933',
+        '0x3d201c408b9eaddc76e27ad45d986c4d9c13e0c6',
+        '0x6e51e1fbd089587d6f58bc9b70efe1cf85642c02',
+        '0x8fa451eaa1dd5ad6c7227d5a2aaf2a4f8888a3df',
+        '0xb699dab9b3f981a01abc0474f085427d20d0d602',
+        '0xc12d1c73ee7dc3615ba4e37e4abfdbddfa38907e',
+        '0xc92e74b131d7b1d46e60e07f3fae5d8877dd03f0',
+        '0xd1e61fcb6e26d4deffa77f21cc5b581c3afa95e2',
+        '0xd667a84005975eef906e980f200541974a8c9766',
+        '0xdacfc5582c56a2f16d8a71ff1f79be145db5333d',
+        '0xdc053dbc608cceaa3ef551aa4597643eafdb6cda',
+        '0xe00cd9b8ebb503e4be266983efc6158fcffe0004',
+        '0xe0923e597cb4b48e2ee122604b4241cbd6d93497',
+        '0xe23366cccf6c5318b47621ceac3296d480b5ebc8',
+    ]
     let response = await alchemy
         .forNetwork(networksList[chainId])
         .core.getTokensForOwner(address)
+    const filtered = async () => {
+        let result = []
+        await response.tokens.map((token) => {
+            !spams.includes(token.contractAddress) && result.push(token)
+        })
+        return result
+    }
 
-    res.json({ response })
+    res.json(await filtered())
 })
 
 /* GET nfts */
@@ -92,9 +117,10 @@ router.get('/:address/:chain/nfts', async function (req, res) {
     const response = await alchemy
         .forNetwork(networksList[chainId])
         .nft.getContractsForOwner(address)
-    const filtered = response.contracts.map((e) => {
+    const filtered = await response.contracts.map((e) => {
         const checkSymbol = () => {
             let symbol = e.symbol.toLocaleLowerCase()
+            console.log(`Contract Address: ${e.contract}`)
             let test
             if (
                 !symbol ||
@@ -102,6 +128,10 @@ router.get('/:address/:chain/nfts', async function (req, res) {
                 symbol.includes('enjpool.com') ||
                 symbol.includes('airdrop') ||
                 symbol.includes('reward')
+                // e.collection.contractAddress ==
+                //     '0x86083B74A4165754D20724cB719d9fAf7774FB22' ||
+                // e.collection.contractAddress ==
+                //     '0xf889dd6AD49D49d4b3e1f8212f00fFb38FADc300'
             ) {
                 test = true
             }
@@ -112,9 +142,11 @@ router.get('/:address/:chain/nfts', async function (req, res) {
                 name: e.name,
                 contract: e.address,
                 symbol: e.symbol,
-                type: e.tokenType,
-                image: e.image,
+                tokenType: e.tokenType,
+                image: e.openSeaMetadata.imageUrl,
                 balance: e.totalBalance,
+                description: e.openSeaMetadata.description,
+                slug: e.openSeaMetadata.collectionSlug,
             }
         }
     })
