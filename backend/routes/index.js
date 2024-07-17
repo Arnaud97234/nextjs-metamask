@@ -181,7 +181,8 @@ router.get('/:address/:chain/nfts', async function (req, res) {
                 e.address == '0x4f39bAFFc187dD6c21846404C2d304A1bCfE1ADB' ||
                 e.address == '0x57e0A744773A18D1f212B961985115C514160b3f' ||
                 e.address == '0xB66a603f4cFe17e3D27B87a8BfCaD319856518B8' ||
-                e.address == '0x495f947276749Ce646f68AC8c248420045cb7b5e'
+                e.address == '0x495f947276749Ce646f68AC8c248420045cb7b5e' ||
+                e.address == '0x2953399124F0cBB46d2CbACD8A89cF0599974963'
             ) {
                 test = true
             }
@@ -194,9 +195,10 @@ router.get('/:address/:chain/nfts', async function (req, res) {
                 symbol: e.symbol,
                 tokenType: e.tokenType,
                 image: e.openSeaMetadata.imageUrl,
-                balance: e.totalBalance,
+                totalBalance: e.totalBalance,
                 description: e.openSeaMetadata.description,
                 slug: e.openSeaMetadata.collectionSlug,
+                floorPrice: e.openSeaMetadata.floorPrice,
             }
         }
     })
@@ -222,7 +224,9 @@ router.get('/:address/:chain/nfts', async function (req, res) {
                             desc: nft.description,
                             tokenId: nft.tokenId,
                             tokenUri: nft.tokenUri,
-                            image: nft.image,
+                            tokenBalance: nft.balance,
+                            imageSmall: nft.image.thumbnailUrl,
+                            imageBig: nft.image.pngUrl,
                         })
                 })
             result.push({ collection, nfts: list })

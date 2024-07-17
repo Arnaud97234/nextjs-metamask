@@ -6,7 +6,7 @@ import WalletOverview from '@/components/Wallet/WalletOverview'
 import Account from '@/components/Account'
 import Tokens from '@/components/Tokens'
 import Nfts from '@/components/Nfts'
-import { Container, Box, Tab } from '@mui/material'
+import { Container, Box, Tab, ZIndex, Opacity } from '@mui/material'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
@@ -50,7 +50,16 @@ export default function Home() {
                     className={styles.container}
                 >
                     <TabContext value={tabValue}>
-                        <TabList onChange={handleChangeTab}>
+                        <TabList
+                            onChange={handleChangeTab}
+                            sx={{
+                                position: 'sticky',
+                                top: '0',
+                                zIndex: '1',
+                                backgroundColor: 'white',
+                                opacity: 0.9,
+                            }}
+                        >
                             <Tab label="Erc20 tokens" value="1" />
                             <Tab label="NFTs" value="2" />
                             <Tab label="Transactions" value="3" />
@@ -58,10 +67,13 @@ export default function Home() {
                         <TabPanel className={styles.tabPanel} value="1">
                             <Tokens props={wallet} />
                         </TabPanel>
-                        <TabPanel value="2">
+                        <TabPanel className={styles.tabPanel} value="2">
                             <Nfts props={wallet} />
                         </TabPanel>
-                        <TabPanel value="3"></TabPanel>
+                        <TabPanel
+                            className={styles.tabPanel}
+                            value="3"
+                        ></TabPanel>
                     </TabContext>
                 </Container>
             </main>
