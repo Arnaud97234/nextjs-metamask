@@ -70,23 +70,26 @@ const Nfts = ({ props }) => {
 
         return nftsList ? (
             <Card className={styles.collection}>
-                <Typography className={styles.collectionName}>
-                    {e.collection.name}
-                </Typography>
-                <span className={styles.collectionIntro}>
+                <Box
+                    className={styles.collectionIntro}
+                    sx={{ display: 'flex', flexDirection: 'row' }}
+                >
                     <CardMedia
                         sx={{
-                            width: '75px',
-                            height: '75px',
-                            minWidth: '75px',
-                            margin: '0 10px 10px 0',
+                            width: '45px',
+                            height: '45px',
+                            minWidth: '45px',
+                            borderRadius: '50px',
                         }}
                         image={e.collection.image}
                     ></CardMedia>
-                    <Typography sx={{ textOverflow: 'ellipsis' }}>
-                        {collectionDesc}
+                    <Typography className={styles.collectionName}>
+                        {e.collection.name}
                     </Typography>
-                </span>
+                    {/* <Typography sx={{ textOverflow: 'ellipsis' }}>
+                        {collectionDesc}
+                    </Typography> */}
+                </Box>
                 <Box className={styles.collectionDetails}>
                     <Box className={styles.collectionDropdown}>
                         <ListItemButton
@@ -109,7 +112,6 @@ const Nfts = ({ props }) => {
                             {openCollection === nftsList.indexOf(e) && (
                                 <Box className={styles.itemText}>
                                     <Typography>
-                                        Collection address:{' '}
                                         {e.collection.contract}
                                     </Typography>
                                     <Typography>

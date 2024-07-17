@@ -112,6 +112,37 @@ router.get('/:address/:chain/tokens', async function (req, res) {
         '0x43458017d9b057c9c2fe97e4629014cb9b66093e',
         '0x509a5b5ecdb5c55ced8a87f3b87b576c7463ead3',
         '0x10503dbed34e291655100a3c204528425abe3235',
+        '0x4dc3643dbc642b72c158e7f3d2ff232df61cb6ce',
+        '0x886f107df86a9c1b04340fbf7da610f55156802c',
+        '0x8a0b040f27407d7a603bca701b857f8f81a1c7af',
+        '0x92f1674a14754b353f7b123d6c5daf0d9d00dc56',
+        '0xaf0cdaef003cd9e12eeed2536b53e8520f5fdc58',
+        '0xa0b2b4b6e83d6523e940b8badd17e897b2bfeb7d',
+        '0xbf89d0156cece2f2fc57001a0deb2774e87be909',
+        '0xe14c0c5d0b407d6bcd3095f7b7f673279856eb52',
+        '0x9335e0fef07fe5f94e7ad3f0475fb3a33f184219',
+        '0xf15cceed8786ad113a2ba75f5578ce1a1ff565a2',
+        '0xff99afd7dd09988d76c4aaab5798216617335b96',
+        '0xf291ea66de48f48bfa7e78925019cce26b38ad92',
+        '0xee41a9354e16e0514c96bba04a71b5e552886c05',
+        '0xb27cea9e38eeb387d3b0672287ca304fbff00b7c',
+        '0xb4eae0b6d272f85060fb48a8fe56835eda1333e8',
+        '0xa39621f9d01792699d4368eef3031fef2aafd3ca',
+        '0x7b0d195f3e798e42da49cf91df147a3f4bdda75c',
+        '0x7f3dc24cfc1c5ba05d00e39fa922754330c5e429',
+        '0x6d646fd533720ca547d74dcfe54b6b9549546fd6',
+        '0x1cba5519248ab505c7ce936159135c062514c359',
+        '0xd661cbe233ca7664382a3522d4e0a937c6c8b9c5',
+        '0x664ad3109735282e7228844c078c24b231d90f73',
+        '0x624471968090742312d1cd37a7f80c16b344d2af',
+        '0x44369c4e359d2eec30d8f3639719edc9c56c9a5f',
+        '0x552b1d48e46013482118134ace547062f31f9ff7',
+        '0x3daa0376b8b65401d42f07815e5e4a7f9cd4cc65',
+        '0x1661528dee8374a6c16cb488cf887a989e786d05',
+        '0x81067076dcb7d3168ccf7036117b9d72051205e2',
+        '0x9b8cc6320f22325759b7d2ca5cd27347bb4ecd86',
+        '0xb1298414a308c71e4d84f1a467bc49b6740ae265',
+        '0x6142f62e7996faec5c5bb9d10669d60299d69dfe',
     ]
     let response = await alchemy
         .forNetwork(networksList[chainId])
@@ -148,7 +179,9 @@ router.get('/:address/:chain/nfts', async function (req, res) {
                 e.address == '0xf889dd6AD49D49d4b3e1f8212f00fFb38FADc300' ||
                 e.address == '0x4f7c7196A4c7Ca429FAc05461f734e2Adb49dcC4' ||
                 e.address == '0x4f39bAFFc187dD6c21846404C2d304A1bCfE1ADB' ||
-                e.address == '0x57e0A744773A18D1f212B961985115C514160b3f'
+                e.address == '0x57e0A744773A18D1f212B961985115C514160b3f' ||
+                e.address == '0xB66a603f4cFe17e3D27B87a8BfCaD319856518B8' ||
+                e.address == '0x495f947276749Ce646f68AC8c248420045cb7b5e'
             ) {
                 test = true
             }

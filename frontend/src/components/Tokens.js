@@ -9,6 +9,7 @@ import {
     AccordionDetails,
 } from '@mui/material'
 import Link from 'next/link'
+import Image from 'next/image'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import { addTokensToStore } from '@/reducers/tokens'
 
@@ -50,6 +51,12 @@ const Tokens = ({ props }) => {
     const tokens = tokensList?.map((e, key) => {
         const title = `${e.name} ${e.contractAddress}`
         const etherscanLink = `https://etherscan.io/token/${e.contractAddress}`
+        let logo
+        e?.logo
+            ? (logo = e.logo)
+            : (logo = 'https://static.alchemyapi.io/images/assets/5864.png')
+
+        console.log(logo)
         return tokensList ? (
             e.balance > 0 && (
                 <Accordion
@@ -61,6 +68,7 @@ const Tokens = ({ props }) => {
                         className={styles.tokenSummary}
                         expandIcon={<ArrowDropDownIcon />}
                     >
+                        <Image src={logo} width={20} height={20} />
                         <Typography sx={{ marginRight: '10px' }}>
                             {e.symbol} {e.balance}
                         </Typography>
