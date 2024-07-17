@@ -2,9 +2,11 @@ import '@/styles/globals.css'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
 import wallet from '../reducers/wallet'
+import nfts from '../reducers/nfts'
+import tokens from '@/reducers/tokens'
 
 const store = configureStore({
-    reducer: { wallet },
+    reducer: { wallet, nfts, tokens },
 })
 
 export default function App({ Component, pageProps }) {

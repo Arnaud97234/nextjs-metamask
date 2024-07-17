@@ -21,7 +21,7 @@ export const walletSlice = createSlice({
         addBalanceToStore: (state, action) => {
             state.value.balance = action.payload
         },
-        deleteFromStore: (state) => {
+        removeWalletFromStore: (state) => {
             state.value.address = null
             state.value.network = null
             state.value.balance = null
@@ -33,6 +33,6 @@ export const {
     addAddressToStore,
     addChainToStore,
     addBalanceToStore,
-    deleteFromStore,
+    removeWalletFromStore,
 } = walletSlice.actions
 export default walletSlice.reducer

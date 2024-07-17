@@ -1,16 +1,23 @@
+import styles from '../styles/Home.module.css'
 import { useState, useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { deleteFromStore } from '../../reducers/wallet'
-import { Button, Box, Typography } from '@mui/material'
+import { useSelector } from 'react-redux'
+import { Box, Typography } from '@mui/material'
 
 const axios = require('axios')
 
 const WalletOverview = () => {
-    const dispatch = useDispatch()
-
-    const clearStore = () => {
-        dispatch(deleteFromStore())
-    }
+    const nftsList = useSelector((state) => state.nfts.value)
+    const [collectionsCount, setCollectionsCount] = useState('Not synced')
+    const [nftsCount, setNftsCount] = useState('Not synced')
+    useEffect(() => {
+        const collectionsCount = nftsList.nfts?.length
+        let nftsCount = 0
+        nftsList.nfts?.map((e) => {
+            nftsCount += e.nfts.length
+        })
+        setCollectionsCount(collectionsCount)
+        setNftsCount(nftsCount)
+    }, [nftsList])
 
     const [connectedAddress, setConnectedAddress] = useState(null)
     const [connectedNetwork, setConnectedNetwork] = useState(null)
@@ -49,10 +56,15 @@ const WalletOverview = () => {
         return (
             connectedAddress &&
             account && (
-                <Box>
+                <Box id={styles.accountBox} className={styles.leftBox}>
                     {account.ens && <Typography>Ens: {account.ens}</Typography>}
                     <Typography>Balance: {account.nativeBalance} Ξ</Typography>
                     <Typography>BlockHeight: {account.blockHeight}</Typography>
+                    {nftsList.nfts && (
+                        <Typography>
+                            {nftsCount} - {collectionsCount}
+                        </Typography>
+                    )}
                 </Box>
             )
         )
