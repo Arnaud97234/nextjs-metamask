@@ -33,7 +33,7 @@ const Nfts = ({ props }) => {
     useEffect(() => {
         if (address && chain && !nftsList) {
             try {
-                fetch(`http://localhost:3000/${address}/${chain}/nfts`)
+                fetch(`http://localhost:3000/account/${address}/${chain}/nfts`)
                     .then((response) => response.json())
                     .then((data) => {
                         console.log('Get Nfts from Api...')
@@ -50,7 +50,6 @@ const Nfts = ({ props }) => {
     const [collectionCard, setCollectionCard] = useState(false)
     const handleClick = (value) => {
         setCollectionCard(value)
-        console.log('Collection Data', collectionCard)
     }
 
     const nfts = nftsList?.map((e) => {

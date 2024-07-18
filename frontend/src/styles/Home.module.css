@@ -22,7 +22,9 @@
 }
 
 .leftBox {
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
     margin: 10px;
     border: solid 1px;
     border-radius: 4px;
@@ -86,12 +88,21 @@
 }
 
 .cardButton {
-    padding: 8px;
+    padding: 10px;
+    padding-top: 13px;
     margin-top: 4px;
-    border: solid 1px white;
+    border: solid 1px orange;
     border-radius: 4px;
-    background-color: whitesmoke;
+    background-color: orange;
     color:#063d7c;
     text-decoration: none;
     font-size: 13px;
+}
+
+.connectButton {
+    padding-top: '11px' !important;
+}
+
+.tabLabel, .collectionCard h5 {
+    color: orange !important;
 }

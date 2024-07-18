@@ -60,9 +60,21 @@ export default function Home() {
                                 opacity: 0.9,
                             }}
                         >
-                            <Tab label="Erc20 tokens" value="1" />
-                            <Tab label="NFTs" value="2" />
-                            <Tab label="Transactions" value="3" />
+                            <Tab
+                                className={styles.tabLabel}
+                                label="Erc20 tokens"
+                                value="1"
+                            />
+                            <Tab
+                                className={styles.tabLabel}
+                                label="NFTs"
+                                value="2"
+                            />
+                            <Tab
+                                className={styles.tabLabel}
+                                label="Transactions"
+                                value="3"
+                            />
                         </TabList>
                         <TabPanel className={styles.tabPanel} value="1">
                             <Tokens props={wallet} />

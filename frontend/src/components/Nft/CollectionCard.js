@@ -14,7 +14,10 @@ import {
     ListItemText,
     Modal,
     Box,
+    Tooltip,
+    Zoom,
 } from '@mui/material'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -24,32 +27,75 @@ const CollectionCard = ({ props }) => {
     const handleOpen = (value) => setOpen(value)
     const handleClose = () => setOpen(false)
 
+    // check if image exist, if not return placeholder
+    const newImage = (image) => {
+        let newImage
+        image ? (newImage = image) : (newImage = `/defaultPicture.png`)
+        return newImage
+    }
+
     const nfts = props.nfts.map((e) => {
+        const tokenId =
+            e.tokenId.length > 35
+                ? e.tokenId.substring(0, 32) + '...'
+                : e.tokenId
+
         return (
             <ListItem
                 onClick={() => handleOpen(e)}
                 sx={{ cursor: 'pointer', my: '8px', p: '0' }}
             >
                 <ListItemAvatar>
-                    <Avatar alt={e.name} src={e.imageSmall}></Avatar>
+                    <Avatar alt={e.name} src={newImage(e.imageSmall)}></Avatar>
                 </ListItemAvatar>
                 <ListItemText
                     primary={e.name}
-                    secondary={e.tokenId}
+                    secondary={tokenId}
                 ></ListItemText>
             </ListItem>
         )
     })
 
+    const copyToClipboardButton = (id) => {
+        const [copied, setCopied] = useState(false)
+        const handleCopy = () => {
+            setCopied(true)
+            navigator.clipboard.writeText(id)
+            setTimeout(() => {
+                setCopied(false)
+            }, 2000)
+        }
+        return (
+            <Tooltip
+                title={copied ? 'Id copied' : 'Copy id'}
+                TransitionComponent={Zoom}
+                placement="top"
+                arrow
+            >
+                <Button
+                    sx={{ color: 'white', marginLeft: '10px' }}
+                    onClick={() => handleCopy()}
+                >
+                    <ContentCopyIcon sx={{ height: '17px' }} />
+                </Button>
+            </Tooltip>
+        )
+    }
+
     return (
         <>
             <Card className={styles.collectionCard}>
                 <CardMedia
-                    image={collection.image}
+                    image={newImage(collection.image)}
                     title={collection.name}
                 ></CardMedia>
                 <CardContent sx={{ padding: 0 }}>
-                    <Typography sx={{ paddingBottom: '6px' }}>
+                    <Typography
+                        sx={{
+                            paddingBottom: '6px',
+                            color: 'orange !important',
+                        }}
+                    >
                         {collection.name}
                     </Typography>
                     <Typography sx={{ fontSize: '12px' }}>
@@ -90,6 +136,7 @@ const CollectionCard = ({ props }) => {
                             alignSelf: 'center',
                             paddingBottom: '10px',
                             marginBottom: '10px',
+                            color: 'orange',
                         }}
                     >
                         {collection.name}
@@ -103,7 +150,7 @@ const CollectionCard = ({ props }) => {
                     >
                         <Image
                             alt={open.name}
-                            src={open.imageSmall}
+                            src={newImage(open.imageSmall)}
                             width={250}
                             height={250}
                         />
@@ -119,7 +166,12 @@ const CollectionCard = ({ props }) => {
                             <Typography variant="h5" id="modal-title">
                                 {open.name}
                             </Typography>
-                            <Typography>{open.tokenId}</Typography>
+                            <Typography>
+                                {open.tokenId?.length > 35
+                                    ? open.tokenId.substring(0, 32) + '...'
+                                    : open.tokenId}{' '}
+                                {copyToClipboardButton(open.tokenId)}
+                            </Typography>
                         </span>
                     </Box>
                     <Typography variant="p" sx={{ px: '50px' }}>

@@ -8,13 +8,16 @@ require('dotenv').config()
 const network = Network.ETH_MAINNET
 
 const defaultConfig = {
-    apiKey: process.env.API_KEY,
+    apiKey: process.env.ALCHEMY_API_KEY,
     network: network,
 }
 
 const overrides = {
-    [Network.MATIC_MAINNET]: { apiKey: process.env.API_KEY, maxRetries: 10 },
-    [Network.ARB_MAINNET]: { apiKey: process.env.API_KEY },
+    [Network.MATIC_MAINNET]: {
+        apiKey: process.env.ALCHEMY_API_KEY,
+        maxRetries: 10,
+    },
+    [Network.ARB_MAINNET]: { apiKey: process.env.ALCHEMY_API_KEY },
 }
 const alchemy = new AlchemyMultichainClient(defaultConfig, overrides)
 
@@ -25,60 +28,9 @@ const networksList = {
     '0xa4b1': Network.ARB_MAINNET,
 }
 
-/* GET wallet */
-router.get('/:address/:chain', async function (req, res) {
-    const address = req.params.address
-    const chainId = req.params.chain
-    let balance = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getBalance(address, 'latest')
-    let nativeBalance = Utils.formatEther(balance, 'ether')
-    let networkInfo = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getNetwork(address)
-    let ens
-    ;(await networkInfo.name) === 'homestead'
-        ? (ens = await alchemy
-              .forNetwork(networksList[Network.ETH_MAINNET])
-              .core.lookupAddress(address))
-        : (ens = false)
-    let blockHeight = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getBlockNumber()
-
-    !networksList.hasOwnProperty(chainId)
-        ? res.status(500).json({ error: 'Network not supported' })
-        : res.json({
-              nativeBalance,
-              ens: ens,
-              network: networkInfo.name,
-              chainId: networkInfo.chainId,
-              blockHeight,
-          })
-})
-
-/* GET transactions */
-router.get('/:address/:chain/transactions/', async function (req, res) {
-    const address = req.params.address
-    const chainId = req.params.chain
-    let response = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getAssetTransfers({
-            fromBlock: '0x0',
-            fromAddress: address,
-            excludeZeroValue: true,
-            category: ['erc20'],
-        })
-    res.json({
-        response,
-    })
-})
-
-/* GET Tokens */
-router.get('/:address/:chain/tokens', async function (req, res) {
-    const address = req.params.address
-    const chainId = req.params.chain
+const isSpam = (address, symbol) => {
     const spams = [
+        '0xB66a603f4cFe17e3D27B87a8BfCaD319856518B8',
         '0x08e1d08db3fd8dd33e040176ad3ea09b7242a8f0',
         '0x11cc04dd962e82d411587c56b815e8f8141eb7d5',
         '0x1412eca9dc7daef60451e3155bb8dbf9da349933',
@@ -143,14 +95,90 @@ router.get('/:address/:chain/tokens', async function (req, res) {
         '0x9b8cc6320f22325759b7d2ca5cd27347bb4ecd86',
         '0xb1298414a308c71e4d84f1a467bc49b6740ae265',
         '0x6142f62e7996faec5c5bb9d10669d60299d69dfe',
+        '0xf889dd6AD49D49d4b3e1f8212f00fFb38FADc300',
+        '0x86083B74A4165754D20724cB719d9fAf7774FB22',
+        '0x4f7c7196A4c7Ca429FAc05461f734e2Adb49dcC4',
+        '0x57e0A744773A18D1f212B961985115C514160b3f',
+        '0x4f39bAFFc187dD6c21846404C2d304A1bCfE1ADB',
+        '0xcbf4ab00b6aa19b4d5d29c7c3508b393a1c01fe3',
+        '0x6df5c1da0310a0725b919579d06de427cb578c83',
+        '0x70784d8a360491562342b4f3d3d039aaacaf8f5d',
+        '0xd4820c0519e42d9c14b5020d7ccc60b8664a5955',
+        '0x2953399124F0cBB46d2CbACD8A89cF0599974963',
     ]
+    if (
+        !symbol ||
+        symbol.toLowerCase().includes('fortnite') ||
+        symbol.toLowerCase().includes('enjpool.com') ||
+        symbol.toLowerCase().includes('airdrop') ||
+        symbol.toLowerCase().includes('reward') ||
+        spams.includes(address)
+    ) {
+        return true
+    }
+}
+
+/* GET Account */
+router.get('/:address/:chain', async function (req, res) {
+    const address = req.params.address
+    const chainId = req.params.chain
+    let balance = await alchemy
+        .forNetwork(networksList[chainId])
+        .core.getBalance(address, 'latest')
+    let nativeBalance = Utils.formatEther(balance, 'ether')
+    let networkInfo = await alchemy
+        .forNetwork(networksList[chainId])
+        .core.getNetwork(address)
+    let ens
+    ;(await networkInfo.name) === 'homestead'
+        ? (ens = await alchemy
+              .forNetwork(networksList[Network.ETH_MAINNET])
+              .core.lookupAddress(address))
+        : (ens = false)
+    let blockHeight = await alchemy
+        .forNetwork(networksList[chainId])
+        .core.getBlockNumber()
+
+    !networksList.hasOwnProperty(chainId)
+        ? res.status(500).json({ error: 'Network not supported' })
+        : res.json({
+              nativeBalance,
+              ens: ens,
+              network: networkInfo.name,
+              chainId: networkInfo.chainId,
+              blockHeight,
+          })
+})
+
+/* GET transactions */
+router.get('/:address/:chain/transactions/', async function (req, res) {
+    const address = req.params.address
+    const chainId = req.params.chain
+    let response = await alchemy
+        .forNetwork(networksList[chainId])
+        .core.getAssetTransfers({
+            fromBlock: '0x0',
+            fromAddress: address,
+            excludeZeroValue: true,
+            category: ['erc20'],
+        })
+    res.json({
+        response,
+    })
+})
+
+/* GET Tokens */
+router.get('/:address/:chain/tokens', async function (req, res) {
+    const address = req.params.address
+    const chainId = req.params.chain
+
     let response = await alchemy
         .forNetwork(networksList[chainId])
         .core.getTokensForOwner(address)
     const filtered = async () => {
         let result = []
         await response.tokens.map((token) => {
-            !spams.includes(token.contractAddress) && result.push(token)
+            !isSpam(token.contractAddress, token.symbol) && result.push(token)
         })
         return result
     }
@@ -166,29 +194,7 @@ router.get('/:address/:chain/nfts', async function (req, res) {
         .forNetwork(networksList[chainId])
         .nft.getContractsForOwner(address)
     const filtered = await response.contracts.map((e) => {
-        const checkSymbol = () => {
-            let symbol = e.symbol.toLocaleLowerCase()
-            let test
-            if (
-                !symbol ||
-                symbol.includes('fortnite') ||
-                symbol.includes('enjpool.com') ||
-                symbol.includes('airdrop') ||
-                symbol.includes('reward') ||
-                e.address == '0x86083B74A4165754D20724cB719d9fAf7774FB22' ||
-                e.address == '0xf889dd6AD49D49d4b3e1f8212f00fFb38FADc300' ||
-                e.address == '0x4f7c7196A4c7Ca429FAc05461f734e2Adb49dcC4' ||
-                e.address == '0x4f39bAFFc187dD6c21846404C2d304A1bCfE1ADB' ||
-                e.address == '0x57e0A744773A18D1f212B961985115C514160b3f' ||
-                e.address == '0xB66a603f4cFe17e3D27B87a8BfCaD319856518B8' ||
-                e.address == '0x495f947276749Ce646f68AC8c248420045cb7b5e' ||
-                e.address == '0x2953399124F0cBB46d2CbACD8A89cF0599974963'
-            ) {
-                test = true
-            }
-            return test
-        }
-        if (!e.isSpam && e.symbol && !checkSymbol()) {
+        if (!e.isSpam && !isSpam(e.address, e.symbol)) {
             return {
                 name: e.name,
                 contract: e.address,

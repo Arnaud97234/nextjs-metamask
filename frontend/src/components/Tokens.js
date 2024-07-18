@@ -33,7 +33,9 @@ const Tokens = ({ props }) => {
     useEffect(() => {
         if (address && chain && !tokensList) {
             try {
-                fetch(`http://localhost:3000/${address}/${chain}/tokens`)
+                fetch(
+                    `http://localhost:3000/account/${address}/${chain}/tokens`
+                )
                     .then((response) => response.json())
                     .then((data) => {
                         console.log('Get Erc20 from Api...')
