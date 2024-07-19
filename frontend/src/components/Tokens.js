@@ -4,13 +4,12 @@ import { useSelector, useDispatch } from 'react-redux'
 import {
     Box,
     Typography,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
+    List,
+    ListItem,
+    ListItemAvatar,
+    Avatar,
+    ListItemText,
 } from '@mui/material'
-import Link from 'next/link'
-import Image from 'next/image'
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import { addTokensToStore } from '@/reducers/tokens'
 
 const Tokens = ({ props }) => {
@@ -34,7 +33,9 @@ const Tokens = ({ props }) => {
     useEffect(() => {
         if (address && chain && !tokensList) {
             try {
-                fetch(`http://localhost:3000/${address}/${chain}/tokens`)
+                fetch(
+                    `http://localhost:3000/account/${address}/${chain}/tokens`
+                )
                     .then((response) => response.json())
                     .then((data) => {
                         console.log('Get Erc20 from Api...')
@@ -50,40 +51,29 @@ const Tokens = ({ props }) => {
 
     const tokens = tokensList?.map((e, key) => {
         const title = `${e.name} ${e.contractAddress}`
-        const etherscanLink = `https://etherscan.io/token/${e.contractAddress}`
         let logo
         e?.logo
             ? (logo = e.logo)
-            : (logo = 'https://static.alchemyapi.io/images/assets/5864.png')
-
-        console.log(logo)
+            : (logo = 'https://res.coinpaper.com/coinpaper/RETH_hrkkkj.png')
         return tokensList ? (
             e.balance > 0 && (
-                <Accordion
+                <ListItem
                     className={styles.token}
                     sx={{ display: 'flex' }}
                     key={key}
                 >
-                    <AccordionSummary
-                        className={styles.tokenSummary}
-                        expandIcon={<ArrowDropDownIcon />}
-                    >
-                        <Image src={logo} width={20} height={20} />
-                        <Typography sx={{ marginRight: '10px' }}>
-                            {e.symbol} {e.balance}
-                        </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ padding: 0 }}>
-                        <Typography>{title}</Typography>
-                        <Link
-                            href={etherscanLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            View on etherscan
-                        </Link>
-                    </AccordionDetails>
-                </Accordion>
+                    <ListItemAvatar>
+                        <Avatar
+                            alt={e.name}
+                            src={logo}
+                            className={styles.itemIcon}
+                        ></Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                        primary={`${e.symbol} ${e.balance}`}
+                        secondary={title}
+                    ></ListItemText>
+                </ListItem>
             )
         ) : (
             <Typography>Token list is empty</Typography>
@@ -100,7 +90,9 @@ const Tokens = ({ props }) => {
                 >
                     Erc20 Tokens
                 </Typography>
-                <Box id={styles.tokensList}>{tokens}</Box>
+                <List dense={true} id={styles.tokensList}>
+                    {tokens}
+                </List>
             </Box>
         )
     )

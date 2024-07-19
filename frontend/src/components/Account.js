@@ -9,14 +9,19 @@ const WalletOverview = () => {
     const nftsList = useSelector((state) => state.nfts.value)
     const [collectionsCount, setCollectionsCount] = useState('Not synced')
     const [nftsCount, setNftsCount] = useState('Not synced')
+    const [nftTotalAmount, setNftTotalAmount] = useState(null)
+
     useEffect(() => {
         const collectionsCount = nftsList.nfts?.length
         let nftsCount = 0
+        let nftTotal = 0
         nftsList.nfts?.map((e) => {
             nftsCount += e.nfts.length
+            nftTotal += e.nfts.length * e.collection.floorPrice
         })
         setCollectionsCount(collectionsCount)
         setNftsCount(nftsCount)
+        setNftTotalAmount(nftTotal)
     }, [nftsList])
 
     const [connectedAddress, setConnectedAddress] = useState(null)
@@ -36,7 +41,7 @@ const WalletOverview = () => {
             setError(null)
             axios
                 .get(
-                    `http://localhost:3000/${connectedAddress}/${connectedNetwork}`
+                    `http://localhost:3000/account/${connectedAddress}/${connectedNetwork}`
                 )
                 .then((response) => {
                     setAccount(response.data)
@@ -57,13 +62,20 @@ const WalletOverview = () => {
             connectedAddress &&
             account && (
                 <Box id={styles.accountBox} className={styles.leftBox}>
+                    <Typography>Network: {account.network}</Typography>
+                    <Typography>BlockHeight: {account.blockHeight}</Typography>
                     {account.ens && <Typography>Ens: {account.ens}</Typography>}
                     <Typography>Balance: {account.nativeBalance} Ξ</Typography>
-                    <Typography>BlockHeight: {account.blockHeight}</Typography>
                     {nftsList.nfts && (
-                        <Typography>
-                            {nftsCount} - {collectionsCount}
-                        </Typography>
+                        <>
+                            <Typography>
+                                {nftsCount} nfts from {collectionsCount}{' '}
+                                collections
+                            </Typography>
+                            <Typography>
+                                Nft Total value: {nftTotalAmount} Ξ
+                            </Typography>
+                        </>
                     )}
                 </Box>
             )

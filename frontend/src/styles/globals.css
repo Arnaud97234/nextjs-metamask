@@ -4,6 +4,13 @@ body {
   height: 100%;
   font-family: "Special Elite", system-ui;
   margin: 0;
-  /* background-color: #36393b; */
   width: 100%;
+}
+
+h3, h4, h5, h6, p, span, button {
+  font-family: "Special Elite", system-ui !important;
+}
+
+.MuiListItemText-secondary {
+  font-size: 13px;
 }

@@ -9,6 +9,12 @@ const nextConfig = {
                 port: '',
                 pathname: '/images/assets/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'res.cloudinary.com',
+                port: '',
+                pathname: '/alchemyapi/image/**',
+            },
         ],
     },
 }

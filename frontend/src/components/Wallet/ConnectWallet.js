@@ -122,9 +122,17 @@ const ConnectWalletButton = () => {
     }
 
     return (
-        <Box>
+        <Box sx={{ alignSelf: 'center', marginBottom: '14px' }}>
             {wallet.address ? (
-                <Button variant="outlined" onClick={disconnect}>
+                <Button
+                    variant="outlined"
+                    onClick={disconnect}
+                    sx={{
+                        paddingTop: '11px',
+                        color: 'orange',
+                        border: 'solid 1px orange',
+                    }}
+                >
                     Disconnect
                 </Button>
             ) : (
@@ -132,6 +140,7 @@ const ConnectWalletButton = () => {
                     disabled={connecting}
                     variant="contained"
                     onClick={connect}
+                    sx={{ paddingTop: '11px', backgroundColor: 'orange' }}
                 >
                     Connect wallet
                 </Button>

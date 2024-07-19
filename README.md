@@ -2,19 +2,20 @@
 
 ## Setup
 
-- Start backend: `yarn start` or `nodemon`
-- Start frontend: `yarn dev`
+-   Start backend: `yarn start` or `nodemon`
+-   Start frontend: `yarn dev`
 
->[!NOTE]
->.env example:
->```
->API_KEY=<apiKey>
->NETWORK=ETH_MAINNET
->#NETWORK=MATIC_MAINNET
->```
+> [!NOTE]
+> .env example:
+>
+> ```
+> ALCHEMY_API_KEY=<apiKey>
+> CMC_API_KEY=<apiKey>
+> ```
 
 > [!WARNING]
->Supported networks:
->-   Mainnet
->-   Matic
->-   Arbitrum
+> Supported networks:
+>
+> -   Mainnet
+> -   Matic
+> -   Arbitrum

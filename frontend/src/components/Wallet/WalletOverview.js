@@ -14,12 +14,12 @@ const WalletOverview = () => {
             <Box>
                 <Typography>{wallet.balance}</Typography>
                 {network === '0x1' && (
-                    <Typography color="blue">MAINNET</Typography>
+                    <Typography color="orange">MAINNET</Typography>
                 )}
             </Box>
         </Box>
     ) : (
-        <Typography variant="h6">Wallet signin to continue ...</Typography>
+        <Typography variant="h6">Connect wallet to continue ...</Typography>
     )
 }
 
