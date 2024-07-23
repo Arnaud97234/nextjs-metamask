@@ -2,13 +2,19 @@ var express = require('express')
 var router = express.Router()
 require('dotenv').config()
 
-router.get('/:currencies/:fiats', async function (req, res) {
-    const currencies = req.params.currencies
-    const countervalues = req.params.fiats
+router.post('/:countervalues', async function (req, res) {
+    const countervalues = req.params.countervalues
     const apiKey = process.env.CMC_API_KEY
+
+    const coinsList = await req.body.coinsList
+
+    const symbolsList = await coinsList.map((e) => {
+        return e.symbol
+    })
+
     try {
         await fetch(
-            `https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${currencies}&convert=${countervalues}`,
+            `https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=${symbolsList}&convert=${countervalues}`,
             {
                 headers: {
                     'x-CMC_PRO_API_KEY': apiKey,
@@ -19,13 +25,22 @@ router.get('/:currencies/:fiats', async function (req, res) {
             .then((data) => {
                 let { timestamp, error_code, error_message } = data.status
                 let quotes = data.data
+                const array = coinsList.map((e) => {
+                    let token = quotes[e.symbol][0]
+                    if (quotes[e.symbol]) {
+                        if (token?.platform?.slug != 'solana') {
+                            return token
+                        }
+                    }
+                })
+
                 res.json({
                     status: { timestamp, error_code, error_message },
-                    quotes,
+                    quotes: array.filter((e) => e),
                 })
             })
     } catch (err) {
-        res.json({ err })
+        res.json({ err: 'Error while fetching coins data' })
     }
 })
 

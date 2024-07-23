@@ -11,14 +11,19 @@ import {
     ListItemText,
 } from '@mui/material'
 import { addTokensToStore } from '@/reducers/tokens'
+import { addCoinsToStore } from '@/reducers/coins'
 
 const Tokens = ({ props }) => {
     const dispatch = useDispatch()
     const addTokens = (list) => {
         dispatch(addTokensToStore(list))
     }
+    const addCoins = (list) => {
+        dispatch(addCoinsToStore(list))
+    }
 
     const tokensFromStore = useSelector((state) => state.tokens.value)
+    const coinsFromStore = useSelector((state) => state.coins.value)
     const [tokensList, setTokensList] = useState(tokensFromStore.tokens)
     const [error, setError] = useState(null)
     const [address, setAddress] = useState(null)
@@ -42,12 +47,47 @@ const Tokens = ({ props }) => {
                         addTokens(data)
                     })
             } catch (err) {
-                console.log('Error :', error)
                 setError(err)
+                console.log('Error while fetching erc20 tokens:', error)
             }
         }
         setTokensList(tokensFromStore.tokens)
     }, [address, chain])
+
+    useEffect(() => {
+        let currenciesList = []
+        const countervalues = ['ETH']
+        if (tokensList && !coinsFromStore.coins) {
+            tokensList.map((e) => {
+                const regex = /[!@#$%^&*()\-+={}[\]:;"'<>,.?\/|\\]/
+                if (!regex.test(e.symbol)) {
+                    e.balance > 0 &&
+                        currenciesList.push({
+                            symbol: e.symbol.toUpperCase(),
+                            name: e.name,
+                            contract: e.contractAddress,
+                        })
+                }
+            })
+            try {
+                fetch(`http://localhost:3000/coins/${countervalues}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                    },
+                    body: JSON.stringify({
+                        coinsList: currenciesList,
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        addCoins(data.quotes)
+                    })
+            } catch (error) {
+                console.log('Error while fetching coins data', error)
+            }
+        }
+    }, [tokensList])
 
     const tokens = tokensList?.map((e, key) => {
         const title = `${e.name} ${e.contractAddress}`

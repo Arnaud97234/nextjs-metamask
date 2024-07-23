@@ -36,8 +36,8 @@ const CollectionCard = ({ props }) => {
 
     const nfts = props.nfts.map((e) => {
         const tokenId =
-            e.tokenId.length > 35
-                ? e.tokenId.substring(0, 32) + '...'
+            e.tokenId.length > 30
+                ? e.tokenId.substring(0, 27) + '...'
                 : e.tokenId
 
         return (
@@ -84,7 +84,7 @@ const CollectionCard = ({ props }) => {
 
     return (
         <>
-            <Card className={styles.collectionCard}>
+            <Card className={styles.card} id={styles.collectionCard}>
                 <CardMedia
                     image={newImage(collection.image)}
                     title={collection.name}
