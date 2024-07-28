@@ -29,9 +29,15 @@ router.post('/:countervalues', async function (req, res) {
                     let token = quotes[e.symbol][0]
                     if (quotes[e.symbol]) {
                         if (token?.platform?.slug != 'solana') {
-                            return token
+                            if (token?.tags) {
+                                let newTags = token.tags.map((e) => {
+                                    return e.slug
+                                })
+                                token = { ...token, tags: newTags }
+                            }
                         }
                     }
+                    return token
                 })
 
                 res.json({

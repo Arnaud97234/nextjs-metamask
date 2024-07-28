@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { addTokensToStore } from '@/reducers/tokens'
 import { addCoinsToStore } from '@/reducers/coins'
+import TokenCard from '@/components/Tokens/TokenCard'
 
 const Tokens = ({ props }) => {
     const dispatch = useDispatch()
@@ -89,8 +90,12 @@ const Tokens = ({ props }) => {
         }
     }, [tokensList])
 
+    const [tokenCard, setTokenCard] = useState(false)
+    const handleClick = (value) => {
+        setTokenCard(value)
+    }
+
     const tokens = tokensList?.map((e, key) => {
-        const title = `${e.name} ${e.contractAddress}`
         let logo
         e?.logo
             ? (logo = e.logo)
@@ -101,6 +106,7 @@ const Tokens = ({ props }) => {
                     className={styles.token}
                     sx={{ display: 'flex' }}
                     key={key}
+                    onClick={() => handleClick(e)}
                 >
                     <ListItemAvatar>
                         <Avatar
@@ -111,7 +117,7 @@ const Tokens = ({ props }) => {
                     </ListItemAvatar>
                     <ListItemText
                         primary={`${e.symbol} ${e.balance}`}
-                        secondary={title}
+                        secondary={e.name}
                     ></ListItemText>
                 </ListItem>
             )
@@ -122,17 +128,20 @@ const Tokens = ({ props }) => {
 
     return (
         address && (
-            <Box id={styles.tokensContainer} className={styles.section}>
-                <Typography
-                    className={styles.boxTitle}
-                    variant="h4"
-                    component="h3"
-                >
-                    Erc20 Tokens
-                </Typography>
-                <List dense={true} id={styles.tokensList}>
-                    {tokens}
-                </List>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box id={styles.tokensBox} className={styles.section}>
+                    <Typography
+                        className={styles.boxTitle}
+                        variant="h4"
+                        component="h3"
+                    >
+                        Erc20 Tokens
+                    </Typography>
+                    <List dense={true} id={styles.tokensList}>
+                        {tokens}
+                    </List>
+                </Box>
+                {tokenCard && <TokenCard props={tokenCard} />}
             </Box>
         )
     )

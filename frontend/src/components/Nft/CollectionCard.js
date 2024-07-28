@@ -88,6 +88,8 @@ const CollectionCard = ({ props }) => {
                 <CardMedia
                     image={newImage(collection.image)}
                     title={collection.name}
+                    sx={{ height: '50px', width: '50px', borderRadius: '50px' }}
+                    className={styles.cardMedia}
                 ></CardMedia>
                 <CardContent sx={{ padding: 0 }}>
                     <Typography
