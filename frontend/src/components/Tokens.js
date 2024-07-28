@@ -11,14 +11,20 @@ import {
     ListItemText,
 } from '@mui/material'
 import { addTokensToStore } from '@/reducers/tokens'
+import { addCoinsToStore } from '@/reducers/coins'
+import TokenCard from '@/components/Tokens/TokenCard'
 
 const Tokens = ({ props }) => {
     const dispatch = useDispatch()
     const addTokens = (list) => {
         dispatch(addTokensToStore(list))
     }
+    const addCoins = (list) => {
+        dispatch(addCoinsToStore(list))
+    }
 
     const tokensFromStore = useSelector((state) => state.tokens.value)
+    const coinsFromStore = useSelector((state) => state.coins.value)
     const [tokensList, setTokensList] = useState(tokensFromStore.tokens)
     const [error, setError] = useState(null)
     const [address, setAddress] = useState(null)
@@ -42,15 +48,54 @@ const Tokens = ({ props }) => {
                         addTokens(data)
                     })
             } catch (err) {
-                console.log('Error :', error)
                 setError(err)
+                console.log('Error while fetching erc20 tokens:', error)
             }
         }
         setTokensList(tokensFromStore.tokens)
     }, [address, chain])
 
+    useEffect(() => {
+        let currenciesList = []
+        const countervalues = ['ETH']
+        if (tokensList && !coinsFromStore.coins) {
+            tokensList.map((e) => {
+                const regex = /[!@#$%^&*()\-+={}[\]:;"'<>,.?\/|\\]/
+                if (!regex.test(e.symbol)) {
+                    e.balance > 0 &&
+                        currenciesList.push({
+                            symbol: e.symbol.toUpperCase(),
+                            name: e.name,
+                            contract: e.contractAddress,
+                        })
+                }
+            })
+            try {
+                fetch(`http://localhost:3000/coins/${countervalues}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                    },
+                    body: JSON.stringify({
+                        coinsList: currenciesList,
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        addCoins(data.quotes)
+                    })
+            } catch (error) {
+                console.log('Error while fetching coins data', error)
+            }
+        }
+    }, [tokensList])
+
+    const [tokenCard, setTokenCard] = useState(false)
+    const handleClick = (value) => {
+        setTokenCard(value)
+    }
+
     const tokens = tokensList?.map((e, key) => {
-        const title = `${e.name} ${e.contractAddress}`
         let logo
         e?.logo
             ? (logo = e.logo)
@@ -61,6 +106,7 @@ const Tokens = ({ props }) => {
                     className={styles.token}
                     sx={{ display: 'flex' }}
                     key={key}
+                    onClick={() => handleClick(e)}
                 >
                     <ListItemAvatar>
                         <Avatar
@@ -71,7 +117,7 @@ const Tokens = ({ props }) => {
                     </ListItemAvatar>
                     <ListItemText
                         primary={`${e.symbol} ${e.balance}`}
-                        secondary={title}
+                        secondary={e.name}
                     ></ListItemText>
                 </ListItem>
             )
@@ -82,17 +128,20 @@ const Tokens = ({ props }) => {
 
     return (
         address && (
-            <Box id={styles.tokensContainer} className={styles.section}>
-                <Typography
-                    className={styles.boxTitle}
-                    variant="h4"
-                    component="h3"
-                >
-                    Erc20 Tokens
-                </Typography>
-                <List dense={true} id={styles.tokensList}>
-                    {tokens}
-                </List>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box id={styles.tokensBox} className={styles.section}>
+                    <Typography
+                        className={styles.boxTitle}
+                        variant="h4"
+                        component="h3"
+                    >
+                        Erc20 Tokens
+                    </Typography>
+                    <List dense={true} id={styles.tokensList}>
+                        {tokens}
+                    </List>
+                </Box>
+                {tokenCard && <TokenCard props={tokenCard} />}
             </Box>
         )
     )

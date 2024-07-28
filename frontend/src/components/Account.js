@@ -7,22 +7,24 @@ const axios = require('axios')
 
 const WalletOverview = () => {
     const nftsList = useSelector((state) => state.nfts.value)
+    const tokensList = useSelector((state) => state.tokens.value)
     const [collectionsCount, setCollectionsCount] = useState('Not synced')
     const [nftsCount, setNftsCount] = useState('Not synced')
     const [nftTotalAmount, setNftTotalAmount] = useState(null)
+    const [erc20TotalAmount, setErc20TotalAmount] = useState(null)
 
     useEffect(() => {
         const collectionsCount = nftsList.nfts?.length
         let nftsCount = 0
         let nftTotal = 0
-        nftsList.nfts?.map((e) => {
+        nftsList?.nfts?.map((e) => {
             nftsCount += e.nfts.length
             nftTotal += e.nfts.length * e.collection.floorPrice
         })
         setCollectionsCount(collectionsCount)
         setNftsCount(nftsCount)
         setNftTotalAmount(nftTotal)
-    }, [nftsList])
+    }, [nftsList, tokensList])
 
     const [connectedAddress, setConnectedAddress] = useState(null)
     const [connectedNetwork, setConnectedNetwork] = useState(null)
@@ -75,6 +77,16 @@ const WalletOverview = () => {
                             <Typography>
                                 Nft Total value: {nftTotalAmount} Ξ
                             </Typography>
+                        </>
+                    )}
+                    {tokensList.tokens && (
+                        <>
+                            <Typography>
+                                {tokensList.tokens.length} erc20 contracts
+                            </Typography>
+                            {/* <Typography>
+                                erc20 Total value: {erc20TotalAmount} Ξ
+                            </Typography> */}
                         </>
                     )}
                 </Box>

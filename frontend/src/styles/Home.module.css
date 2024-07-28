@@ -41,18 +41,22 @@
     padding: 0;
 }
 
+#nftsByCollectionBox {
+    margin-right: 10px;
+}
+
 .itemIcon {
     width: 30px;
     height: 30px;
 }
 
-.collection {
+.collection, .token {
     cursor: pointer;
     margin: 12px 0px;
     padding: 0;
 }
 
-.collectionCard {
+.card {
     display: flex;
     flex-direction: column;
     height: fit-content;
@@ -60,10 +64,17 @@
     top: 48px;
     background-image: linear-gradient(to bottom right, #081e36,  #0a4a92);
     padding: 16px 20px;
+    min-width: fit-content;
 }
 
-.collectionCard * {
+.card *  {
     color: whitesmoke;
+}
+
+.cardMedia {
+    width: 50px;
+    height: 50px;
+    border-radius: 50px;
 }
 
 .modal {
@@ -103,6 +114,10 @@
     padding-top: '11px' !important;
 }
 
-.tabLabel, .collectionCard h5 {
+.collectionCard h5 {
     color: orange !important;
+}
+.tabLabel {
+    color: orange;
+    font-weight: bold;
 }

@@ -85,7 +85,7 @@ const Nfts = ({ props }) => {
         address &&
         nfts && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Box id={styles.nftsByCollectionContainer}>
+                <Box id={styles.nftsByCollectionBox}>
                     <Typography
                         className={styles.boxTitle}
                         variant="h4"

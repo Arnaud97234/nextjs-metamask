@@ -210,7 +210,7 @@ router.get('/:address/:chain/nfts', async function (req, res) {
     })
     const contracts = await filtered.filter((e) => e)
     const contractsList = await contracts.map((e) => {
-        return e.contract
+        e.contract
     })
     const nftsList = await alchemy
         .forNetwork(networksList[chainId])
