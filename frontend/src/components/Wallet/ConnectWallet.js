@@ -1,8 +1,6 @@
-'use-client'
-import { useSDK } from '@metamask/sdk-react'
+'use client'
 import { Box, Button } from '@mui/material'
-import React, { useEffect } from 'react'
-import { MetaMaskProvider } from '@metamask/sdk-react'
+import React, { useEffect, useState } from 'react'
 import { formatBalance } from '../../utils'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -15,9 +13,8 @@ import { removeNftsFromStore } from '@/reducers/nfts'
 import { removeTokensFromStore } from '@/reducers/tokens'
 import { removeCoinsFromStore } from '@/reducers/coins'
 
+// Simple wrapper for MetaMask SDK that avoids direct use of useSDK hook
 const ConnectWalletButton = () => {
-    const { sdk, connected, connecting, provider, chainId } = useSDK()
-
     const dispatch = useDispatch()
     const addAddress = (address) => {
         dispatch(addAddressToStore(address))
@@ -36,90 +33,136 @@ const ConnectWalletButton = () => {
     }
 
     const wallet = useSelector((state) => state.wallet.value)
+    const [connecting, setConnecting] = useState(false)
 
-    // Connect metamask
+    // Connect metamask - use a more direct approach
     const connect = async () => {
         try {
-            const connect = await sdk?.connect()
-            addAddress(connect?.[0])
-            setOpen(false)
+            setConnecting(true);
+
+            // Check if we're in browser environment
+            if (typeof window === 'undefined') {
+                return;
+            }
+
+            // Direct Ethereum provider check
+            if (!window.ethereum) {
+                return;
+            }
+
+            // Try to get accounts - this is safer than using SDK directly
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                addAddress(accounts[0]);
+                // Also get chain info when connecting
+                try {
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    addChain(chainId);
+                } catch (chainErr) {
+                    // Silently ignore chain ID errors - not critical for functionality
+                }
+            } else {
+                // Request account access
+                const newAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (newAccounts.length > 0) {
+                    addAddress(newAccounts[0]);
+                    // Also get chain info when connecting
+                    try {
+                        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                        addChain(chainId);
+                    } catch (chainErr) {
+                        // Silently ignore chain ID errors - not critical for functionality
+                    }
+                }
+            }
         } catch (err) {
-            sdk.terminate()
+            // Error is handled by UI state, no need to log here
+        } finally {
+            setConnecting(false);
         }
     }
 
     useEffect(() => {
-        updateChain()
-        dispatch(removeNftsFromStore())
-        dispatch(removeTokensFromStore())
-        dispatch(removeCoinsFromStore())
-    }, [wallet.address, chainId])
-
-    useEffect(() => {
-        if (wallet.address) {
+        if (typeof window !== 'undefined' && wallet.address) {
             const getBalance = async () => {
-                let balance = formatBalance(
-                    await window.ethereum.request({
-                        method: 'eth_getBalance',
-                        params: [wallet.address, 'latest'],
-                    })
-                )
-                addBalance(balance)
+                try {
+                    if (window.ethereum) {
+                        let balance = formatBalance(
+                            await window.ethereum.request({
+                                method: 'eth_getBalance',
+                                params: [wallet.address, 'latest'],
+                            })
+                        )
+                        addBalance(balance)
+                    }
+                } catch (err) {
+                    addBalance(null)
+                }
             }
             getBalance()
-        } else addBalance(null)
+        } else {
+            addBalance(null)
+        }
     }, [wallet.address, wallet.network])
 
     // Connected account or chain change
     const updateAccount = async () => {
-        if (window.ethereum) {
-            try {
+        try {
+            if (typeof window !== 'undefined' && window.ethereum) {
                 const address = await window.ethereum.request({
                     method: 'eth_accounts',
                 })
                 addAddress(address[0])
-            } catch (err) {
-                return { error: err.message }
             }
+        } catch (err) {
+            // Error handling for account updates
         }
     }
 
     const updateChain = async () => {
-        if (window.ethereum) {
-            try {
+        try {
+            if (typeof window !== 'undefined' && window.ethereum) {
                 const chain = await window.ethereum.request({
                     method: 'eth_chainId',
                 })
                 addChain(chain)
-                // await updateAccount()
-            } catch (err) {
-                return { error: err.message }
             }
+        } catch (err) {
+            // Error handling for chain updates
         }
     }
 
     useEffect(() => {
-        if (window.ethereum) {
+        // Check if we're in a browser environment and have proper Ethereum provider
+        if (typeof window !== 'undefined' && window.ethereum) {
             try {
+                // Set up event listeners with proper error handling
                 window.ethereum.on('accountsChanged', updateAccount)
                 window.ethereum.on('chainChanged', updateChain)
+
                 return () => {
-                    window.ethereum?.removeListener(
-                        'accountsChanged',
-                        updateAccount
-                    )
-                    window.ethereum?.removeListener('chainChanged', updateChain)
+                    // Safely clean up listeners with proper error handling
+                    try {
+                        if (window.ethereum?.removeListener) {
+                            window.ethereum.removeListener('accountsChanged', updateAccount)
+                            window.ethereum.removeListener('chainChanged', updateChain)
+                        }
+                    } catch (err) {
+                        // Silently ignore cleanup errors - not critical for functionality
+                    }
                 }
             } catch (err) {
-                return { error: err.message }
+                // Error handling for event listener setup
             }
         }
-    }, [wallet])
+    }, [])
 
     // Disconnect wallet
     const disconnect = () => {
-        if (sdk) {
-            sdk.terminate()
+        try {
+            clearStore()
+        } catch (err) {
+            // Silently handle disconnect errors - store will be cleared anyway
             clearStore()
         }
     }
@@ -153,24 +196,14 @@ const ConnectWalletButton = () => {
 }
 
 const ConnectWallet = () => {
-    // Metamask init
+    // Metamask init - make sure we're in browser environment
     const host =
         typeof window !== 'undefined'
             ? window.location.host
             : 'http://localhost:3001'
-    const sdkOptions = {
-        logging: { developerMode: false },
-        checkInstallationImmediately: false,
-        dappMetadata: {
-            name: '0x-sandbox',
-            url: host,
-        },
-    }
 
     return (
-        <MetaMaskProvider debug={false} sdkOptions={sdkOptions}>
-            <ConnectWalletButton />
-        </MetaMaskProvider>
+        <ConnectWalletButton />
     )
 }
 

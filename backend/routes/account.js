@@ -5,7 +5,33 @@ var express = require('express')
 var router = express.Router()
 require('dotenv').config()
 
+// Debug environment variables
+console.log('=== Environment Debug ===');
+console.log('Loaded environment variables. ALCHEMY_API_KEY exists:', !!process.env.ALCHEMY_API_KEY);
+console.log('ALCHEMY_API_KEY value (full):', process.env.ALCHEMY_API_KEY);
+if (process.env.ALCHEMY_API_KEY) {
+    console.log('ALCHEMY_API_KEY length:', process.env.ALCHEMY_API_KEY.length);
+    console.log('ALCHEMY_API_KEY first 15 chars:', process.env.ALCHEMY_API_KEY.substring(0, 15));
+    console.log('Starts with "alch_":', process.env.ALCHEMY_API_KEY.startsWith('alch_'));
+    console.log('Starts with "-alch_":', process.env.ALCHEMY_API_KEY.startsWith('-alch_'));
+}
+
 const network = Network.ETH_MAINNET
+
+// Validate API key
+if (!process.env.ALCHEMY_API_KEY) {
+    console.warn('WARNING: ALCHEMY_API_KEY not found in environment variables. This will cause API calls to fail.');
+    console.warn('Please set your Alchemy API key in the .env file');
+} else if (process.env.ALCHEMY_API_KEY === 'your_actual_alchemy_api_key_here') {
+    console.warn('WARNING: ALCHEMY_API_KEY is still set to the placeholder value. This will cause API calls to fail.');
+    console.warn('Please replace with your actual Alchemy API key');
+} else if (process.env.ALCHEMY_API_KEY.startsWith('-alch_')) {
+    console.warn('WARNING: ALCHEMY_API_KEY appears to be a demo key or malformed. This will cause authentication errors.');
+    console.warn('Please replace with a valid Alchemy API key from https://alchemy.com/');
+} else if (!process.env.ALCHEMY_API_KEY.startsWith('alch_')) {
+    console.warn('WARNING: ALCHEMY_API_KEY does not start with "alch_". This might cause authentication errors.');
+    console.warn('Valid keys should start with "alch_" prefix');
+}
 
 const defaultConfig = {
     apiKey: process.env.ALCHEMY_API_KEY,
@@ -26,6 +52,11 @@ const networksList = {
     '0xaa36a7': Network.ETH_SEPOLIA,
     '0x89': Network.MATIC_MAINNET,
     '0xa4b1': Network.ARB_MAINNET,
+    // Handle decimal chain IDs as well
+    1: Network.ETH_MAINNET,
+    11155111: Network.ETH_SEPOLIA,
+    137: Network.MATIC_MAINNET,
+    42161: Network.ARB_MAINNET,
 }
 
 const isSpam = (address, symbol) => {
@@ -122,49 +153,142 @@ const isSpam = (address, symbol) => {
 router.get('/:address/:chain', async function (req, res) {
     const address = req.params.address
     const chainId = req.params.chain
-    let balance = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getBalance(address, 'latest')
-    let nativeBalance = Utils.formatEther(balance, 'ether')
-    let networkInfo = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getNetwork(address)
-    let ens
-    ;(await networkInfo.name) === 'homestead'
-        ? (ens = await alchemy
-              .forNetwork(networksList[Network.ETH_MAINNET])
-              .core.lookupAddress(address))
-        : (ens = false)
-    let blockHeight = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getBlockNumber()
 
-    !networksList.hasOwnProperty(chainId)
-        ? res.status(500).json({ error: 'Network not supported' })
-        : res.json({
-              nativeBalance,
-              ens: ens,
-              network: networkInfo.name,
-              chainId: networkInfo.chainId,
-              blockHeight,
-          })
+    // Normalize chain ID to handle both hex and decimal formats
+    let normalizedChainId = chainId
+    if (typeof chainId === 'string' && chainId.startsWith('0x')) {
+        // Convert hex string to decimal number for lookup
+        normalizedChainId = parseInt(chainId, 16)
+    }
+
+    console.log('Chain ID received:', chainId, 'Normalized to:', normalizedChainId);
+
+    // Check if the network is supported
+    const network = networksList[normalizedChainId] || networksList[chainId]
+
+    console.log('Network determined:', network);
+
+    if (!network) {
+        return res.status(400).json({ error: 'Network not supported' })
+    }
+
+    try {
+        console.log('Making Alchemy call for address:', address, 'on network:', network);
+
+        let balance = await alchemy
+            .forNetwork(network)
+            .core.getBalance(address, 'latest')
+        let nativeBalance = Utils.formatEther(balance, 'ether')
+        let networkInfo = await alchemy
+            .forNetwork(network)
+            .core.getNetwork(address)
+        let ens
+        ;(await networkInfo.name) === 'homestead'
+            ? (ens = await alchemy
+                  .forNetwork(networksList[Network.ETH_MAINNET])
+                  .core.lookupAddress(address))
+            : (ens = false)
+        let blockHeight = await alchemy
+            .forNetwork(network)
+            .core.getBlockNumber()
+
+        res.json({
+            nativeBalance,
+            ens: ens,
+            network: networkInfo.name,
+            chainId: networkInfo.chainId,
+            blockHeight,
+        })
+    } catch (error) {
+        console.error('Detailed error in account route:', {
+            message: error.message,
+            stack: error.stack,
+            address: address,
+            network: network,
+            chainId: chainId
+        });
+
+        // Check if it's a missing API key error or authentication error
+        if (error.message.includes('API key') ||
+            error.message.includes('demo') ||
+            (error.message.includes('403') && error.message.includes('Forbidden')) ||
+            (error.message.includes('401') && error.message.includes('Unauthorized')) ||
+            error.message.includes('Must be authenticated')) {
+            return res.status(500).json({
+                error: 'Alchemy API key authentication failed. Please check your .env file and ensure you have a valid Alchemy API key.',
+                details: error.message,
+                help: 'Get a free API key from https://alchemy.com/',
+                troubleshooting: 'Make sure your API key is valid and not a demo key (keys starting with -alch_)'
+            });
+        }
+
+        // Also check for specific error patterns in the URL
+        if (error.message.includes('eth-mainnet.g.alchemy.com/v2/demo')) {
+            return res.status(500).json({
+                error: 'Alchemy API key not configured. The API is using the demo endpoint which requires a valid API key.',
+                details: 'Please configure your ALCHEMY_API_KEY in the .env file',
+                help: 'Get a free API key from https://alchemy.com/'
+            });
+        }
+
+        res.status(500).json({ error: 'Failed to fetch account data' })
+    }
 })
 
 /* GET transactions */
 router.get('/:address/:chain/transactions/', async function (req, res) {
     const address = req.params.address
     const chainId = req.params.chain
-    let response = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getAssetTransfers({
-            fromBlock: '0x0',
-            fromAddress: address,
-            excludeZeroValue: true,
-            category: ['erc20'],
+
+    // Normalize chain ID to handle both hex and decimal formats
+    let normalizedChainId = chainId
+    if (typeof chainId === 'string' && chainId.startsWith('0x')) {
+        // Convert hex string to decimal number for lookup
+        normalizedChainId = parseInt(chainId, 16)
+    }
+
+    console.log('Chain ID received:', chainId, 'Normalized to:', normalizedChainId);
+
+    // Check if the network is supported
+    const network = networksList[normalizedChainId] || networksList[chainId]
+
+    console.log('Network determined:', network);
+
+    if (!network) {
+        return res.status(400).json({ error: 'Network not supported' })
+    }
+
+    try {
+        let response = await alchemy
+            .forNetwork(network)
+            .core.getAssetTransfers({
+                fromBlock: '0x0',
+                fromAddress: address,
+                excludeZeroValue: true,
+                category: ['erc20'],
+            })
+        res.json({
+            response,
         })
-    res.json({
-        response,
-    })
+    } catch (error) {
+        console.error('Error in transactions route:', error)
+
+        // Check if it's an authentication error
+        if (error.message.includes('API key') ||
+            error.message.includes('demo') ||
+            (error.message.includes('403') && error.message.includes('Forbidden')) ||
+            (error.message.includes('401') && error.message.includes('Unauthorized')) ||
+            error.message.includes('Must be authenticated')) {
+            return res.status(500).json({
+                error: 'Alchemy API key authentication failed. Please check your .env file and ensure you have a valid Alchemy API key.',
+                details: error.message,
+                help: 'Get a free API key from https://alchemy.com/',
+                troubleshooting: 'Make sure your API key is valid and not a demo key (keys starting with -alch_)'
+            });
+        }
+
+        res.status(500).json({ error: 'Failed to fetch transactions data' })
+    }
 })
 
 /* GET Tokens */
@@ -172,75 +296,185 @@ router.get('/:address/:chain/tokens', async function (req, res) {
     const address = req.params.address
     const chainId = req.params.chain
 
-    let response = await alchemy
-        .forNetwork(networksList[chainId])
-        .core.getTokensForOwner(address)
-    const filtered = async () => {
-        let result = []
-        await response.tokens.map((token) => {
-            !isSpam(token.contractAddress, token.symbol) && result.push(token)
-        })
-        return result
+    // Normalize chain ID to handle both hex and decimal formats
+    let normalizedChainId = chainId
+    if (typeof chainId === 'string' && chainId.startsWith('0x')) {
+        // Convert hex string to decimal number for lookup
+        normalizedChainId = parseInt(chainId, 16)
     }
 
-    res.json(await filtered())
+    console.log('Chain ID received:', chainId, 'Normalized to:', normalizedChainId);
+
+    // Check if the network is supported
+    const network = networksList[normalizedChainId] || networksList[chainId]
+
+    console.log('Network determined:', network);
+
+    if (!network) {
+        return res.status(400).json({ error: 'Network not supported' })
+    }
+
+    try {
+        console.log('Fetching tokens for address:', address, 'on network:', network);
+        console.log('Address validation - length:', address ? address.length : 'undefined');
+        console.log('Address validation - first 10 chars:', address ? address.substring(0, 10) : 'undefined');
+
+        // Validate the address format
+        if (!address || address.length < 42) {
+            return res.status(400).json({ error: 'Invalid address format' })
+        }
+
+        let response = await alchemy
+            .forNetwork(network)
+            .core.getTokensForOwner(address)
+
+        console.log('Raw Alchemy response:', response);
+        console.log('Response tokens count:', response.tokens ? response.tokens.length : 'No tokens');
+        console.log('Response structure:', typeof response);
+
+        // Handle case where response might not be properly formatted
+        if (!response || !response.tokens) {
+            console.log('No tokens property in response - returning empty array');
+            return res.json([])
+        }
+
+        // Process tokens with spam filtering
+        const filteredTokens = response.tokens.filter((token) => {
+            return !isSpam(token.contractAddress, token.symbol)
+        })
+
+        console.log('Filtered tokens count:', filteredTokens.length);
+
+        res.json(filteredTokens)
+    } catch (error) {
+        console.error('Error in tokens route:', error)
+        console.error('Error stack:', error.stack)
+
+        // Check for specific authentication errors
+        if (error.message && (
+            error.message.includes('Must be authenticated') ||
+            error.message.includes('401') ||
+            error.message.includes('403') ||
+            error.message.includes('Unauthorized')
+        )) {
+            console.error('Authentication error in tokens route:', error.message);
+            return res.status(500).json({
+                error: 'Alchemy API key authentication failed',
+                details: error.message,
+                help: 'Please check your .env file and ensure you have a valid Alchemy API key from https://alchemy.com/'
+            });
+        }
+
+        // Check for demo key errors
+        if (error.message && error.message.includes('demo')) {
+            console.error('Demo key detected in tokens route:', error.message);
+            return res.status(500).json({
+                error: 'Alchemy API key not configured properly',
+                details: 'The API is using the demo endpoint which requires a valid API key',
+                help: 'Please set your ALCHEMY_API_KEY in the .env file with a valid key from https://alchemy.com/'
+            });
+        }
+
+        // Handle any other errors
+        console.error('Other error in tokens route:', error.message);
+        res.status(500).json({ error: 'Failed to fetch tokens data' })
+    }
 })
 
 /* GET nfts */
 router.get('/:address/:chain/nfts', async function (req, res) {
     const address = req.params.address
     const chainId = req.params.chain
-    const response = await alchemy
-        .forNetwork(networksList[chainId])
-        .nft.getContractsForOwner(address)
-    const filtered = await response.contracts.map((e) => {
-        if (!e.isSpam && !isSpam(e.address, e.symbol)) {
-            return {
-                name: e.name,
-                contract: e.address,
-                symbol: e.symbol,
-                tokenType: e.tokenType,
-                image: e.openSeaMetadata.imageUrl,
-                totalBalance: e.totalBalance,
-                description: e.openSeaMetadata.description,
-                slug: e.openSeaMetadata.collectionSlug,
-                floorPrice: e.openSeaMetadata.floorPrice,
-            }
-        }
-    })
-    const contracts = await filtered.filter((e) => e)
-    const contractsList = await contracts.map((e) => {
-        e.contract
-    })
-    const nftsList = await alchemy
-        .forNetwork(networksList[chainId])
-        .nft.getNftsForOwner(address, {
-            contractAddresses: contractsList,
-        })
 
-    const nftsByCollection = async () => {
-        let result = []
-        await contracts.map((collection) => {
-            let list = []
-            nftsList &&
-                nftsList.ownedNfts.map((nft) => {
-                    nft.contract.address == collection.contract &&
-                        list.push({
-                            name: nft.name,
-                            desc: nft.description,
-                            tokenId: nft.tokenId,
-                            tokenUri: nft.tokenUri,
-                            tokenBalance: nft.balance,
-                            imageSmall: nft.image.thumbnailUrl,
-                            imageBig: nft.image.pngUrl,
-                        })
-                })
-            result.push({ collection, nfts: list })
-        })
-        return result
+    // Normalize chain ID to handle both hex and decimal formats
+    let normalizedChainId = chainId
+    if (typeof chainId === 'string' && chainId.startsWith('0x')) {
+        // Convert hex string to decimal number for lookup
+        normalizedChainId = parseInt(chainId, 16)
     }
 
-    res.json(await nftsByCollection())
+    console.log('Chain ID received:', chainId, 'Normalized to:', normalizedChainId);
+
+    // Check if the network is supported
+    const network = networksList[normalizedChainId] || networksList[chainId]
+
+    console.log('Network determined:', network);
+
+    if (!network) {
+        return res.status(400).json({ error: 'Network not supported' })
+    }
+
+    try {
+        const response = await alchemy
+            .forNetwork(network)
+            .nft.getContractsForOwner(address)
+        const filtered = await response.contracts.map((e) => {
+            if (!e.isSpam && !isSpam(e.address, e.symbol)) {
+                return {
+                    name: e.name,
+                    contract: e.address,
+                    symbol: e.symbol,
+                    tokenType: e.tokenType,
+                    image: e.openSeaMetadata.imageUrl,
+                    totalBalance: e.totalBalance,
+                    description: e.openSeaMetadata.description,
+                    slug: e.openSeaMetadata.collectionSlug,
+                    floorPrice: e.openSeaMetadata.floorPrice,
+                }
+            }
+        })
+        const contracts = await filtered.filter((e) => e)
+        const contractsList = await contracts.map((e) => {
+            e.contract
+        })
+        const nftsList = await alchemy
+            .forNetwork(network)
+            .nft.getNftsForOwner(address, {
+                contractAddresses: contractsList,
+            })
+
+        const nftsByCollection = async () => {
+            let result = []
+            await contracts.map((collection) => {
+                let list = []
+                nftsList &&
+                    nftsList.ownedNfts.map((nft) => {
+                        nft.contract.address == collection.contract &&
+                            list.push({
+                                name: nft.name,
+                                desc: nft.description,
+                                tokenId: nft.tokenId,
+                                tokenUri: nft.tokenUri,
+                                tokenBalance: nft.balance,
+                                imageSmall: nft.image.thumbnailUrl,
+                                imageBig: nft.image.pngUrl,
+                            })
+                    })
+                result.push({ collection, nfts: list })
+            })
+            return result
+        }
+
+        res.json(await nftsByCollection())
+    } catch (error) {
+        console.error('Error in nfts route:', error)
+
+        // Check if it's an authentication error
+        if (error.message.includes('API key') ||
+            error.message.includes('demo') ||
+            (error.message.includes('403') && error.message.includes('Forbidden')) ||
+            (error.message.includes('401') && error.message.includes('Unauthorized')) ||
+            error.message.includes('Must be authenticated')) {
+            return res.status(500).json({
+                error: 'Alchemy API key authentication failed. Please check your .env file and ensure you have a valid Alchemy API key.',
+                details: error.message,
+                help: 'Get a free API key from https://alchemy.com/',
+                troubleshooting: 'Make sure your API key is valid and not a demo key (keys starting with -alch_)'
+            });
+        }
+
+        res.status(500).json({ error: 'Failed to fetch NFTs data' })
+    }
 })
 
 module.exports = router

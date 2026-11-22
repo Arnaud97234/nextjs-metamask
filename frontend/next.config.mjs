@@ -15,6 +15,12 @@ const nextConfig = {
                 port: '',
                 pathname: '/alchemyapi/image/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'nft2-cdn.alchemy.com',
+                port: '',
+                pathname: '/cdn-cgi/image/**',
+            },
         ],
     },
 }
