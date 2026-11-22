@@ -4,6 +4,13 @@ var path = require('path')
 var cookieParser = require('cookie-parser')
 var logger = require('morgan')
 
+// Validate API key at startup
+require('dotenv').config();
+if (!process.env.ALCHEMY_API_KEY || process.env.ALCHEMY_API_KEY === 'your_actual_alchemy_api_key_here') {
+    console.warn('WARNING: ALCHEMY_API_KEY not configured. Alchemy API calls will fail.');
+    console.warn('Please set your Alchemy API key in the .env file');
+}
+
 var accountRouter = require('./routes/account')
 var coinsRouter = require('./routes/coins')
 

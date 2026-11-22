@@ -1,19 +1,17 @@
 import styles from '../styles/Home.module.css'
 import Head from 'next/head'
-import { Inter } from 'next/font/google'
 import ConnectWallet from '@/components/Wallet/ConnectWallet'
 import WalletOverview from '@/components/Wallet/WalletOverview'
 import Account from '@/components/Account'
 import Tokens from '@/components/Tokens'
 import Nfts from '@/components/Nfts'
-import { Container, Box, Tab, ZIndex, Opacity } from '@mui/material'
+import Transactions from '@/components/Transactions'
+import { Container, Box, Tab } from '@mui/material'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
     const [tabValue, setTabValue] = useState('1')
@@ -85,7 +83,9 @@ export default function Home() {
                         <TabPanel
                             className={styles.tabPanel}
                             value="3"
-                        ></TabPanel>
+                        >
+                            <Transactions props={wallet} />
+                        </TabPanel>
                     </TabContext>
                 </Container>
             </main>

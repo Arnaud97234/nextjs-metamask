@@ -3,17 +3,30 @@ var router = express.Router()
 require('dotenv').config()
 
 router.post('/:countervalues', async function (req, res) {
-    const countervalues = req.params.countervalues
-    const apiKey = process.env.CMC_API_KEY
-
-    const coinsList = await req.body.coinsList
-
-    const symbolsList = await coinsList.map((e) => {
-        return e.symbol
-    })
-
     try {
-        await fetch(
+        const countervalues = req.params.countervalues
+        const apiKey = process.env.CMC_API_KEY
+
+        // Validate input
+        if (!req.body.coinsList || !Array.isArray(req.body.coinsList)) {
+            return res.status(400).json({ error: 'Invalid coins list provided' })
+        }
+
+        const coinsList = req.body.coinsList
+
+        // Validate that we have a valid API key
+        if (!apiKey) {
+            return res.status(500).json({ error: 'CoinMarketCap API key not configured' })
+        }
+
+        const symbolsList = coinsList.map((e) => e.symbol)
+
+        // Validate that we have symbols to fetch
+        if (symbolsList.length === 0) {
+            return res.json({ status: {}, quotes: [] })
+        }
+
+        const response = await fetch(
             `https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=${symbolsList}&convert=${countervalues}`,
             {
                 headers: {
@@ -21,32 +34,37 @@ router.post('/:countervalues', async function (req, res) {
                 },
             }
         )
-            .then((response) => response.json())
-            .then((data) => {
-                let { timestamp, error_code, error_message } = data.status
-                let quotes = data.data
-                const array = coinsList.map((e) => {
-                    let token = quotes[e.symbol][0]
-                    if (quotes[e.symbol]) {
-                        if (token?.platform?.slug != 'solana') {
-                            if (token?.tags) {
-                                let newTags = token.tags.map((e) => {
-                                    return e.slug
-                                })
-                                token = { ...token, tags: newTags }
-                            }
-                        }
-                    }
-                    return token
-                })
 
-                res.json({
-                    status: { timestamp, error_code, error_message },
-                    quotes: array.filter((e) => e),
-                })
-            })
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        let { timestamp, error_code, error_message } = data.status
+        let quotes = data.data
+
+        const array = coinsList.map((e) => {
+            let token = quotes?.[e.symbol]?.[0]
+            if (quotes?.[e.symbol]) {
+                if (token?.platform?.slug != 'solana') {
+                    if (token?.tags) {
+                        let newTags = token.tags.map((tag) => {
+                            return tag.slug
+                        })
+                        token = { ...token, tags: newTags }
+                    }
+                }
+            }
+            return token
+        })
+
+        res.json({
+            status: { timestamp, error_code, error_message },
+            quotes: array.filter((e) => e),
+        })
     } catch (err) {
-        res.json({ err: 'Error while fetching coins data' })
+        res.status(500).json({ error: 'Error while fetching coins data' })
     }
 })
 

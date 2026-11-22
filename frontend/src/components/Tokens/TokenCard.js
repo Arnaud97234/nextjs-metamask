@@ -16,8 +16,13 @@ import { useSelector } from 'react-redux'
 const tokenCard = ({ props }) => {
     const { name, logo, symbol, balance, contractAddress } = props
     const coins = useSelector((state) => state.coins.value)
-    const array = coins.coins?.filter((e) => e.symbol == symbol)
-    const tokenMarketData = array[0]
+
+    // Safely handle the case where coins or coins.coins might be undefined
+    let tokenMarketData = null;
+    if (coins && coins.coins && symbol) {
+        const array = coins.coins.filter((e) => e.symbol === symbol);
+        tokenMarketData = array[0];
+    }
 
     const ethPrice =
         tokenMarketData?.quote &&
